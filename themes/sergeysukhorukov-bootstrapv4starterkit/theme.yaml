@@ -1,0 +1,7 @@
+name: Bootstrap v4 Starter Kit
+description: 'This is an OctoberCMS theme starter kit on Bootstrap 4.'
+previewImage: 'assets/dist/images/theme-preview.png'
+author: Sergey Sukhorukov
+homepage: 'https://github.com/mrsukhorukov/oc-bootstrap-v4-starter-kit'
+code: ''
+form: configs/fields.yaml

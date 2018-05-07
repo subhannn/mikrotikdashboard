@@ -1,0 +1,38 @@
+<div data-control="toolbar">
+    <?php if($this->parent_id != null): ?>
+    <a href="<?= Backend::url('xnitro/mikrotik/subnetting') ?>"
+        class="btn btn-default oc-icon-chevron-left">
+        Back to Group IP
+    </a>
+    <?php endif; ?>
+
+    <?php if($this->group_id != null): ?>
+    <a href="<?= Backend::url('xnitro/mikrotik/subnetting/index/'.$this->group_id) ?>"
+        class="btn btn-default oc-icon-chevron-left">
+        Back to Pool IP
+    </a>
+    <?php endif; ?>
+    
+    <button
+        class="btn btn-primary oc-icon-plus"
+        data-request="onRequestGroup"
+        data-request-confirm="Are you sure you want to Request new Group IP?"
+        <?php if($this->parent_id != null): echo "data-request-data=\"parent_id: '$this->parent_id'\""; endif; ?>
+        data-stripe-load-indicator>
+        Request New Group
+    </button>
+
+    <button
+        class="btn btn-danger oc-icon-trash-o"
+        disabled="disabled"
+        onclick="$(this).data('request-data', { checked: $('.control-list').listWidget('getChecked') })"
+        data-request="onDelete"
+        data-request-confirm="Are you sure you want to delete the selected Subnettings?"
+        data-trigger-action="enable"
+        data-trigger=".control-list input[type=checkbox]"
+        data-trigger-condition="checked"
+        data-request-success="$(this).prop('disabled', 'disabled')"
+        data-stripe-load-indicator>
+        Delete selected
+    </button>
+</div>

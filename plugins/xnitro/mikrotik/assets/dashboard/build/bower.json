@@ -1,0 +1,11 @@
+{
+  "name": "Dynamic Theme",
+  "description": "Dynamic theme for octobercms",
+  "version": "1.0.0",
+  "directory": "../assets/bower",
+  "dependencies": {
+    "jquery-ui": "*",
+    "underscore": "^1.8.3",
+    "backbone": "^1.3.3"
+  }
+}

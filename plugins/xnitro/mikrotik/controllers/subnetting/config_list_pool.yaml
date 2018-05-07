@@ -1,0 +1,47 @@
+# ===================================
+#  List Behavior Config
+# ===================================
+
+# Model List Column configuration
+list: $/xnitro/mikrotik/models/poolip/columns.yaml
+
+# Model Class name
+modelClass: Xnitro\Mikrotik\Models\PoolIp
+
+# List Title
+title: Manage Subnettings
+
+# Link URL for each record
+recordUrl: xnitro/mikrotik/subip/show/:id
+
+# Message to display if the list is empty
+noRecordsMessage: backend::lang.list.no_records
+
+# Records to display per page
+recordsPerPage: 20
+
+# Display page numbers with pagination, disable to improve performance
+showPageNumbers: true
+
+# Displays the list column set up button
+showSetup: true
+
+# Displays the sorting link on each column
+showSorting: true
+
+# Default sorting column
+# defaultSort:
+#     column: created_at
+#     direction: desc
+
+# Display checkboxes next to each record
+showCheckboxes: true
+
+# Toolbar widget configuration
+toolbar:
+    # Partial for toolbar buttons
+    buttons: list_toolbar_pool
+
+    # Search widget configuration
+    search:
+        prompt: backend::lang.list.search_prompt
