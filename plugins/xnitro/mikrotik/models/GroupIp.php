@@ -16,7 +16,7 @@ class GroupIp extends Model
     /**
      * @var array Fillable fields
      */
-    protected $fillable = ['ip', 'size', 'user_id', 'last_ip', 'parent_id', 'meta'];
+    protected $fillable = ['ip', 'size', 'user_id', 'last_ip', 'parent_id', 'group_name', 'meta'];
 
     /**
      * @var array Relations
@@ -25,11 +25,19 @@ class GroupIp extends Model
     public $hasMany = [
         'metas'  => [
             'Xnitro\Mikrotik\Models\MetaIp',
-            'key'   => 'ip_id'
+            'key'   => 'ip_id',
+            'delete' => true,
+        ],
+        'pool_ip'   => [
+            'Xnitro\Mikrotik\Models\PoolIp',
+            'key'   => 'group_id',
+            'delete' => true,
         ]
     ];
 
-    public $belongsTo = [];
+    public $belongsTo = [
+        'user'  => ['Backend\Models\User']
+    ];
     public $belongsToMany = [];
     public $morphTo = [];
     public $morphOne = [];

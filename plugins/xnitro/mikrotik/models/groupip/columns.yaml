@@ -6,3 +6,8 @@ columns:
     ip:
         label: IP
         searchable: true
+    user:
+        label: user
+        relation: user
+        select: login
+        searchable: true

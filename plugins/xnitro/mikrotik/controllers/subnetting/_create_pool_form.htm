@@ -1,0 +1,37 @@
+<?= Form::ajax('onRequestGroup', [
+    'data-stripe-load-indicator' => 1,
+]) ?>
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="popup">&times;</button>
+        <h4 class="modal-title">Request New Pool IP</h4>
+    </div>
+    <div class="modal-body">
+        <div class="form-group">
+            <label>Pool Ip Size</label>
+            <select required class="form-control custom-select" name="network_size">
+                <option value="">--Select Nework Size--</option>
+                <option value="24">24</option>
+                <option value="25">25</option>
+                <option value="26">26</option>
+                <option value="27">27</option>
+                <option value="28">28</option>
+                <option value="29">29</option>
+            </select>
+        </div>
+
+        <input type="hidden" name="parent_id" value="<?= $parent_id ?>">
+    </div>
+    <div class="modal-footer">
+        <button
+            type="submit"
+            class="btn btn-primary">
+            Request
+        </button>
+        <button
+            type="button"
+            class="btn btn-default"
+            data-dismiss="popup">
+            <?= e(trans('backend::lang.form.cancel')) ?>
+        </button>
+    </div>
+<?= Form::close() ?>

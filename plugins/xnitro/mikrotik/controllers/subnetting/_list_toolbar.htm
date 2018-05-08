@@ -13,19 +13,30 @@
     </a>
     <?php endif; ?>
     
+    <?php if($this->parent_id != null): ?>
+    <button
+        class="btn btn-primary oc-icon-plus"
+        data-control="popup"
+        data-handler="onRequestFormPool"
+        data-request-data="parent_id: '<?= $this->parent_id ?>'"
+        data-stripe-load-indicator>
+        Request New Pool IP
+    </button>
+    <?php else: ?>
     <button
         class="btn btn-primary oc-icon-plus"
         data-request="onRequestGroup"
         data-request-confirm="Are you sure you want to Request new Group IP?"
-        <?php if($this->parent_id != null): echo "data-request-data=\"parent_id: '$this->parent_id'\""; endif; ?>
         data-stripe-load-indicator>
         Request New Group
     </button>
+    <?php endif; ?>
+    
 
     <button
         class="btn btn-danger oc-icon-trash-o"
         disabled="disabled"
-        onclick="$(this).data('request-data', { checked: $('.control-list').listWidget('getChecked') })"
+        onclick="$(this).data('request-data', { checked: $('.control-list').listWidget('getChecked'), definition: '<?= $this->definition ?>' })"
         data-request="onDelete"
         data-request-confirm="Are you sure you want to delete the selected Subnettings?"
         data-trigger-action="enable"
