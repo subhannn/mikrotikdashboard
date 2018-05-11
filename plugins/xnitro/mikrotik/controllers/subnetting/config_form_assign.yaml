@@ -1,0 +1,21 @@
+# ===================================
+#  Form Behavior Config
+# ===================================
+
+# Record name
+name: Subnetting
+
+# Model Form Field configuration
+form: $/xnitro/mikrotik/models/poolip/fields.yaml
+
+# Model Class name
+modelClass: Xnitro\Mikrotik\Models\PoolIp
+
+# Default redirect location
+defaultRedirect: xnitro/mikrotik/subnetting
+
+# Create page
+create:
+    title: Assign IP to User
+    redirect: xnitro/mikrotik/subnetting/update/:id
+    redirectClose: xnitro/mikrotik/subnetting

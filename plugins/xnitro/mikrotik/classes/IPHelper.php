@@ -2,6 +2,7 @@
 namespace Xnitro\Mikrotik\Classes;
 
 use Xnitro\Mikrotik\Models\GroupIp;
+use Xnitro\Mikrotik\Models\PoolIp;
 use IPv4\SubnetCalculator;
 use BackendAuth;
 use ApplicationException;
@@ -13,6 +14,8 @@ class IPHelper{
 	const FIRST_GROUP_IP = '10.0.0.0';
 
 	const GROUP_SIZE = 20;
+
+	const POOL_SIZE = 28;
 
 	public function requestNewGroupIp($parent_id=null, $size=self::GROUP_SIZE){
 		$group_name = null;
@@ -65,6 +68,8 @@ class IPHelper{
 				'last_usable_ip'	=> $subCul->getAddressableHostRange()[1]
 			]
 		];
+		// print_r($data);
+		// exit();
 		
 		if($group_name != null)
 			$data['group_name'] = $group_name;
@@ -72,6 +77,76 @@ class IPHelper{
 		$newGroup = GroupIp::create($data);
 		
 		Flash::success($flash_message);
+
+		return true;
+	}
+
+	public function assignIpForm($pool_id=null, $return_number=false){
+		if(!$pool_id){
+			throw new ApplicationException('Pool ID Not Found');
+			return false;
+		}
+		$pool = GroupIp::find($pool_id);
+		if(!isset($pool->id)){
+			throw new ApplicationException('Pool ID Not Found');
+			return false;
+		}
+
+		$available_ip = $pool->meta['usable_ip'] - count($pool->pool_ip);
+		if($available_ip <= 0 && !$return_number){
+			throw new ApplicationException('Current Pool IP not Available');
+			return false;
+		}elseif($return_number){
+			return $available_ip;
+		}
+
+		$data = [];
+		
+		$data['ips'] = range(1, $available_ip);
+		
+		return $data;
+	}
+
+	public function assignIp($pool_id, $number_ip, $user_id){
+		if(!$pool_id){
+			throw new ApplicationException('Pool ID Not Found');
+			return false;
+		}
+		$pool = GroupIp::find($pool_id);
+		if(!isset($pool->id)){
+			throw new ApplicationException('Pool ID Not Found');
+			return false;
+		}
+
+		$available_ip = $pool->meta['usable_ip'] - count($pool->pool_ip);
+		if($available_ip <= 0){
+			throw new ApplicationException('Current Pool IP not Available');
+			return false;
+		}
+		if($number_ip > $available_ip){
+			throw new ApplicationException('Only Available '.$available_ip.' IP on this Pool, please create manual new Pool.');
+			return false;
+		}
+		$last_ip = $pool->pool_ip()->getLastIp()->first();
+		if(!$last_ip){
+			$last_ip = $pool->meta['first_usable_ip'];
+		}else{
+			$last_ip = long2ip(ip2long($last_ip->ip)+1);
+		}
+		$createPool = [];
+		foreach (range(1, $number_ip) as $num) {
+			$last_ip = long2ip(ip2long($last_ip));
+			$createPool = new PoolIp([
+				'group_id'	=> $pool_id,
+				'ip'		=> $last_ip
+			]);
+			$createPool->assign = [$user_id];
+			$createPool->save();
+
+			$last_ip = long2ip(ip2long($last_ip)+1);
+		}
+
+		Flash::success('Assign IP Success');
 
 		return true;
 	}

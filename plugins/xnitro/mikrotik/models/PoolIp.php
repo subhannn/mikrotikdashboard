@@ -20,7 +20,7 @@ class PoolIp extends Model
     /**
      * @var array Fillable fields
      */
-    protected $fillable = [];
+    protected $fillable = ['ip', 'group_id'];
 
     /**
      * @var array Relations
@@ -28,10 +28,19 @@ class PoolIp extends Model
     public $hasOne = [];
     public $hasMany = [];
     public $belongsTo = [];
-    public $belongsToMany = [];
+    public $belongsToMany = [
+        'assign' => [
+            'RainLab\User\Models\User',
+            'table' => 'xnitro_mikrotik_assign_ip'
+        ],
+    ];
     public $morphTo = [];
     public $morphOne = [];
     public $morphMany = [];
     public $attachOne = [];
     public $attachMany = [];
+
+    public function scopeGetLastIp($query){
+        return $query->orderBy('created_at', 'desc');
+    }
 }

@@ -6,3 +6,14 @@ columns:
     ip:
         label: IP
         searchable: true
+        clickable: false
+    created_at:
+        label: 'Created'
+        type: timetense
+        clickable: false
+    assign_to:
+        label: 'Assign To'
+        relation: assign
+        select: name
+        clickable: false
+

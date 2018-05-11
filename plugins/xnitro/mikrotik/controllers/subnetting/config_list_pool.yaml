@@ -12,7 +12,8 @@ modelClass: Xnitro\Mikrotik\Models\PoolIp
 title: Manage Subnettings
 
 # Link URL for each record
-recordUrl: xnitro/mikrotik/subip/show/:id
+recordUrl: false
+recordOnClick: true
 
 # Message to display if the list is empty
 noRecordsMessage: backend::lang.list.no_records

@@ -1,0 +1,41 @@
+<?= Form::ajax('onAssignIp', [
+    'data-stripe-load-indicator' => 1,
+]) ?>
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="popup">&times;</button>
+        <h4 class="modal-title">Assign IP to User</h4>
+    </div>
+    <div class="modal-body">
+        <div class="form-group span-left is-required">
+            <label>Number IP</label>
+            <select required class="form-control custom-select" name="number_ip">
+                <option value="">--Select Numper IP--</option>
+                <?php foreach($ips as $ip): ?>
+                <option value="<?= $ip ?>"><?= $ip ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <div class="form-group span-right is-required">
+            <label>User</label>
+            <select required class="form-control custom-select" name="user" data-handler="onSearchUser" data-placeholder="--Select User--" data-minimum-input-length="2" data-ajax--delay="500">
+                <option value=""></option>
+            </select>
+        </div>
+
+        <input type="hidden" name="pool_id" value="<?= $pool_id ?>">
+    </div>
+    <div class="modal-footer">
+        <button
+            type="submit"
+            class="btn btn-primary">
+            Assign
+        </button>
+        <button
+            type="button"
+            class="btn btn-default"
+            data-dismiss="popup">
+            <?= e(trans('backend::lang.form.cancel')) ?>
+        </button>
+    </div>
+<?= Form::close() ?>

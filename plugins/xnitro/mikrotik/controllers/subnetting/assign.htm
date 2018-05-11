@@ -1,0 +1,39 @@
+<?php Block::put('breadcrumb') ?>
+    <ul>
+        <li><a href="<?= Backend::url('xnitro/mikrotik/subnetting/pool/'.$this->_var['group_id'].'/'.$this->_var['pool_id']) ?>">Pool IP</a></li>
+        <li>Assign IP to User</li>
+    </ul>
+<?php Block::endPut() ?>
+
+<?php if (!$this->fatalError): ?>
+
+    <?= Form::open(['class' => 'layout']) ?>
+
+        <div class="layout-row">
+            <?= $this->makePartial('form_assign') ?>
+        </div>
+
+        <div class="form-buttons">
+            <div class="loading-indicator-container">
+                <button
+                    type="submit"
+                    data-request="onSave"
+                    data-hotkey="ctrl+s, cmd+s"
+                    data-load-indicator="Assigning..."
+                    class="btn btn-primary">
+                    Assign
+                </button>
+                <span class="btn-text">
+                    or <a href="<?= Backend::url('xnitro/mikrotik/subnetting') ?>">Cancel</a>
+                </span>
+            </div>
+        </div>
+
+    <?= Form::close() ?>
+
+<?php else: ?>
+
+    <p class="flash-message static error"><?= e($this->fatalError) ?></p>
+    <p><a href="<?= Backend::url('xnitro/mikrotik/subnetting') ?>" class="btn btn-default">Return to subnetting list</a></p>
+
+<?php endif ?>

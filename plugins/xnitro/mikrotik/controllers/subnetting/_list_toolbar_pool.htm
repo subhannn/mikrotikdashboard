@@ -1,6 +1,28 @@
 <div data-control="toolbar">
-    <a href="<?= Backend::url('xnitro/mikrotik/subnetting/index/'.$this->group_id) ?>"
+    <a href="<?= Backend::url('xnitro/mikrotik/subnetting/index/'.$this->_var['group_id']) ?>"
         class="btn btn-default oc-icon-chevron-left">
         Back to Pool IP
     </a>
+
+    <button
+        class="btn btn-primary oc-icon-plus"
+        data-control="popup"
+        data-handler="onRequestFormAssignIP"
+        data-request-data="group_id: '<?= $this->_var['group_id'] ?>', pool_id: '<?= $this->_var['pool_id'] ?>'">
+        Assign IP to User
+    </button>
+
+    <?php if($count = $this->_var['available_ip']): ?>
+    <div style="padding: 8px 8px 8px 8px;font-size: 16px;white-space: nowrap;float: none;display: inline-block;vertical-align: middle;font-weight: bold;color: #000;background-color: #b9dbef;">
+	    <div>
+	    	Available : <?= $count ?> IP
+	    </div>
+	</div>
+	<?php else: ?>
+	<div style="padding: 8px 8px 8px 8px;font-size: 16px;white-space: nowrap;float: none;display: inline-block;vertical-align: middle;font-weight: bold;color: #000;background-color: #f6b5b2;">
+	    <div>
+	    	IP Not Available
+	    </div>
+	</div>
+	<?php endif; ?>
 </div>
