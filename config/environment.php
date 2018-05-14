@@ -29,7 +29,7 @@ return [
     'hosts' => [
 
         'localhost' => 'dev',
-
+        'ix.tunnel.id'  => 'production'
     ],
 
 ];
