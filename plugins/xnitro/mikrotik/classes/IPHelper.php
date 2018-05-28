@@ -53,6 +53,8 @@ class IPHelper{
 		}
 
 		$subCul = new SubnetCalculator($group_ip, $size);
+		$first_usable_ip = $subCul->getAddressableHostRange()[0];
+		$first_usable_ip = long2ip(ip2long($first_usable_ip)+1);
 		$data = [
 			'ip'		=> (string) $group_ip,
 			'size'		=> $size,
@@ -63,8 +65,8 @@ class IPHelper{
 				'netmask'			=> $subCul->getSubnetMask(),
 				'network_address'	=> $subCul->getNetworkPortion(),
 				'broadcast_address'	=> $subCul->getBroadcastAddress(),
-				'usable_ip'			=> $subCul->getNumberAddressableHosts(),
-				'first_usable_ip'	=> $subCul->getAddressableHostRange()[0],
+				'usable_ip'			=> ($subCul->getNumberAddressableHosts()-1),
+				'first_usable_ip'	=> $first_usable_ip,
 				'last_usable_ip'	=> $subCul->getAddressableHostRange()[1]
 			]
 		];
@@ -133,6 +135,8 @@ class IPHelper{
 		}else{
 			$last_ip = long2ip(ip2long($last_ip->ip)+1);
 		}
+		// echo $last_ip;
+		// exit();
 		$createPool = [];
 		foreach (range(1, $number_ip) as $num) {
 			$last_ip = long2ip(ip2long($last_ip));

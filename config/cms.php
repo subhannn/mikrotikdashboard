@@ -1,7 +1,4 @@
 <?php
-//echo '<pre>';
-//print_r($_SERVER);
-//exit();
 
 return [
 
@@ -52,7 +49,7 @@ return [
     |
     */
 
-    'backendForceSecure' => false,
+    'backendForceSecure' => null,
 
     /*
     |--------------------------------------------------------------------------
