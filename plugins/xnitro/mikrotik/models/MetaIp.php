@@ -22,7 +22,7 @@ class MetaIp extends Model
     public $belongsTo = [
         'group' => [
             'Xnitro\Mikrotik\Models\GroupIp', 
-            'key'   => 'ip_id'
+            'key'   => 'ip_id',
         ]
     ];
     public $belongsToMany = [];

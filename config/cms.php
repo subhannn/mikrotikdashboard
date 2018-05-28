@@ -49,7 +49,7 @@ return [
     |
     */
 
-    'backendForceSecure' => true,
+    'backendForceSecure' => null,
 
     /*
     |--------------------------------------------------------------------------
