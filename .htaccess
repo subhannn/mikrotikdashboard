@@ -17,6 +17,12 @@
     ##
     # RewriteCond %{HTTPS} off
     # RewriteRule (.*) https://%{SERVER_NAME}/$1 [R,L]
+    
+    ## Force secure connection
+    RewriteCond %{HTTP:X-Forwarded-Proto} =http [OR]
+    RewriteCond %{HTTP:X-Forwarded-Proto} =""
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
     ##
     ## Black listed folders
