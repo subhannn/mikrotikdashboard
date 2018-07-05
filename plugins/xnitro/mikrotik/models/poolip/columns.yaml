@@ -3,17 +3,33 @@
 # ===================================
 
 columns:
-    ip:
-        label: IP
+    user_name:
+        label: User
         searchable: true
         clickable: false
+        relation: user
+        select: concat(name, " (", username, ")")
+    server_name:
+        label: Server
+        searchable: true
+        clickable: false
+        relation: server
+        select: concat(`name`, " (", host, ")")
+    size:
+        label: Network Size
+        searchable: false
+        clickable: false
+    ip:
+        label: Root IP
+        searchable: false
+        clickable: false
+    range_ip:
+        label: Range Pool IP
+        select: concat(usable_first_ip, " - ", usable_last_ip)
+        clickable: false
+        searchable: false
     created_at:
         label: 'Created'
         type: timetense
-        clickable: false
-    assign_to:
-        label: 'Assign To'
-        relation: assign
-        select: name
         clickable: false
 

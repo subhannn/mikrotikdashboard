@@ -1,0 +1,10 @@
+title = "Dashboard"
+url = "/dashboard/:subcategory?"
+
+[session]
+security = "user"
+redirect = "home"
+
+[mikrotikDashboard]
+==
+{% include 'tunnelid/dashboard/dist/index.html'|themes_path %}

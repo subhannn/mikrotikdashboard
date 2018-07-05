@@ -9,7 +9,7 @@ list: $/xnitro/mikrotik/models/poolip/columns.yaml
 modelClass: Xnitro\Mikrotik\Models\PoolIp
 
 # List Title
-title: Manage Subnettings
+title: Manage Pool IP
 
 # Link URL for each record
 recordUrl: false
@@ -46,3 +46,5 @@ toolbar:
     # Search widget configuration
     search:
         prompt: backend::lang.list.search_prompt
+
+filter: config_filter_pool.yaml

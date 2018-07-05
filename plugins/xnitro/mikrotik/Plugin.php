@@ -1,7 +1,9 @@
 <?php namespace Xnitro\Mikrotik;
 
+use App;
 use Backend;
 use System\Classes\PluginBase;
+use Illuminate\Foundation\AliasLoader;
 
 /**
  * Mikrotik Plugin Information File
@@ -30,7 +32,12 @@ class Plugin extends PluginBase
      */
     public function register()
     {
+        $alias = AliasLoader::getInstance();
+        $alias->alias('IpHelper', 'Xnitro\Mikrotik\Facades\IpHelper');
 
+        App::singleton('xnitro.ip', function() {
+            return \Xnitro\Mikrotik\Classes\IPHelper::instance();
+        });
     }
 
     /**
@@ -86,7 +93,44 @@ class Plugin extends PluginBase
                 'icon'        => 'icon-leaf',
                 'permissions' => ['xnitro.mikrotik.*'],
                 'order'       => 500,
+                'sideMenu' => [
+                    'pool_ip' => [
+                        'label' => 'Pool IP',
+                        'icon' => 'icon-bars',
+                        'url' => Backend::url('xnitro/mikrotik/subnetting/index'),
+                        'permissions' => ['xnitro.mikrotik.*'],
+                    ],
+                    'settings' => [
+                        'label' => 'Settings Mikrotik Server',
+                        'icon' => 'icon-desktop',
+                        'url' => Backend::url('xnitro/mikrotik/settings'),
+                        'permissions' => ['xnitro.mikrotik.admin'],
+                    ],
+                ]
             ],
+        ];
+    }
+
+    public function registerSettings()
+    {
+        return [
+            'config' => [
+                'label'       => 'Mikrotik',
+                'icon'        => 'icon-leaf',
+                'description' => 'Setting for Mikrotik Plugin.',
+                'class'       => 'Xnitro\Mikrotik\Models\Settings',
+                // 'permissions' => ['rainlab.builder.manage_plugins'],
+                'order'       => 600
+            ]
+        ];
+    }
+
+    public function registerMarkupTags()
+    {
+        return [
+            'filters' => [
+                'themes_path'   => 'themes_path'
+            ]
         ];
     }
 }

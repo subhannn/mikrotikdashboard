@@ -1,0 +1,7 @@
+# ===================================
+#  Form Behavior Config
+# ===================================
+
+form: $/xnitro/mikrotik/models/settings/fields.yaml
+modelClass: Xnitro\Mikrotik\Models\Settings
+defaultRedirect: xnitro/mikrotik/settings

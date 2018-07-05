@@ -7,6 +7,12 @@ use IPv4\SubnetCalculator;
 use BackendAuth;
 use ApplicationException;
 use Flash;
+use Xnitro\Mikrotik\Models\Settings;
+use Auth;
+use Xnitro\Mikrotik\Models\MikrotikServer;
+use Xnitro\Mikrotik\Models\ChildUser;
+use Xnitro\Mikrotik\Classes\Server;
+use Xnitro\Mikrotik\Classes\MikrotikProcess;
 
 class IPHelper{
 	use \October\Rain\Support\Traits\Singleton;
@@ -16,6 +22,265 @@ class IPHelper{
 	const GROUP_SIZE = 20;
 
 	const POOL_SIZE = 28;
+
+	const NETWORK_IP = [
+		'30'	=> '10.10.0.0',
+		'29'	=> '10.11.0.0',
+		'28'	=> '10.12.0.0'
+	];
+
+	private $settings = null;
+
+	private $user = null;
+
+	public function init(){
+		$this->settings = Settings::instance();
+		$user = Auth::getUser();
+		if($this->user == null && $user){
+			$this->user = $user;
+		}
+	}
+
+	public function requestNewPoolIp($network_size, $user, $server_id){
+		if(!isset(self::NETWORK_IP[$network_size])){
+			throw new ApplicationException('Network Size out of Size');
+			return false;
+		}
+
+		$user = Auth::findUserById($user);
+		if(!$user){
+			throw new ApplicationException('User not found or user is suspended.');
+			return false;
+		}
+
+		// Check Existing IP Same Network Size
+		$checkUser = PoolIp::CheckUser($server_id, $network_size, $user->id)->first();
+		if($checkUser){
+			throw new ApplicationException('User ('.$user->name.' '.$user->surname.') already subscribe /'.$checkUser->size.', Please upgrade to have much IP.');
+			return false;
+		}
+		
+		$rootIp = self::NETWORK_IP[$network_size];
+		$rootCal = new SubnetCalculator($rootIp, '16');
+		$firstRootIp = $this->nextIp($rootCal->getAddressableHostRange()[0]);
+		$lastRootIp = $rootCal->getAddressableHostRange()[1];
+		// $release = PoolIp::getReleaseIp($server, $network_size);
+		// if($release->count() > 0){
+
+		// }
+
+		$last_pool_ip = PoolIp::GetLastIp($server_id, $network_size)->first();
+		if($last_pool_ip){
+			$rootUserIp = $this->nextIp($last_pool_ip->usable_last_ip, 2);
+		}else{
+			$rootUserIp = $firstRootIp;
+		}
+
+		$userCal = new SubnetCalculator($rootUserIp, $network_size);
+		$firstUserIp = $userIp = $this->nextIp($userCal->getAddressableHostRange()[0]);
+		$lastUserIp = $userCal->getAddressableHostRange()[1];
+		$usableIpSize = ($userCal->getNumberAddressableHosts()-1);
+		if($usableIpSize > 1){
+			$firstUserIp = $this->nextIp($firstUserIp);
+		}
+
+		$userUsername = $user->username;
+		$userPassword = $this->generateStrongPassword(10);
+		$data = [
+			'ip'				=> $userIp,
+			'usable_first_ip'	=> $firstUserIp,
+			'usable_last_ip'	=> $lastUserIp,
+			'size'				=> $network_size,
+			'user_id'			=> $user->id,
+			'username'			=> $userUsername,
+			'password'			=> $userPassword,
+			'server_id'			=> $server_id,
+			'status'			=> 1
+		];
+		
+		$flash_message = 'Create Pool IP Success';
+		$newPoolIp = PoolIp::create($data);
+
+		// SERVER PROCESS
+		// #Create POOL IP
+		$t = $this->generateStrongPassword(3, false, 'lud');
+		$range = $usableIpSize==1?$userIp:($userIp.'-'.$lastUserIp);
+		$name = $user->username;
+
+		// $server = Server::instance()->makeServer($server_id);
+		// $server->createPoolIp($name, $range);
+
+		MikrotikProcess::withChain([
+			MikrotikProcess::createPoolIp([
+				'server_id'	=> $server_id,
+				'name'  => $name.'_pool',
+	            'ranges'=> $range
+			]),
+			MikrotikProcess::createProfileIp([
+				'server_id'		=> $server_id,
+				'name'  		=> $name.'_profile',
+	            'local-address'	=> $userCal->getAddressableHostRange()[0],
+	            'remote-address'=> $name.'_pool'
+			]),
+			MikrotikProcess::createSecretPPP([
+				'server_id'		=> $server_id,
+				'name'  		=> $user->username,
+	            'profile'		=> $name.'_profile',
+	            'password'		=> $userPassword
+			]),
+		])->dispatch();
+
+		Flash::success($flash_message);
+
+		return true;
+	}
+
+	public function getTunnelIpList(){
+		if($this->user){
+			$pool_ip = PoolIp::where('user_id', $this->user->id)->first();
+			$data = [
+				'root_account'		=> [],
+				'max_child_account'	=> 0,
+				'child'				=> []
+			];
+			if($pool_ip){
+				$max_child = (ip2long($pool_ip->usable_last_ip)-ip2long($pool_ip->ip));
+				$child = $pool_ip->child_user()->AllChildUser()->toArray();
+				$data['max_child_account'] = ($max_child - count($child));
+				$data['child'] = $child;
+				$data['root_account'] = array_only($pool_ip->attributes, ['id', 'username', 'password', 'status', 'created_at']);
+			}
+
+			return $data;
+		}
+	}
+
+	public function createUserTunnelChild(){
+		if($this->user){
+			$pool_ip = PoolIp::where('user_id', $this->user->id)->first();
+			$data = [
+				'root_account'		=> [],
+				'max_child_account'	=> 0,
+				'child'				=> []
+			];
+			if($pool_ip){
+				// create new user
+				$t = $this->generateStrongPassword(3, false, 'lud');
+				$username = $pool_ip->user->username.'_'.$t;
+				$password = $this->generateStrongPassword(10);
+
+				$child = ChildUser::create([
+					'pool_ip_id'	=> $pool_ip->id,
+					'user'			=> $username,
+					'pass'			=> $password,
+					'status'		=> 1
+				]);
+
+				if($child){
+					// create on server
+					MikrotikProcess::withChain([
+						MikrotikProcess::createSecretPPP([
+							'server_id'		=> $pool_ip->server_id,
+							'name'  		=> $username,
+				            'profile'		=> $pool_ip->user->username.'_profile',
+				            'password'		=> $password
+						]),
+					])->dispatch();
+
+					$max_child = (ip2long($pool_ip->usable_last_ip)-ip2long($pool_ip->ip));
+					$child = $pool_ip->child_user()->AllChildUser()->toArray();
+					$data['max_child_account'] = ($max_child - count($child));
+					$data['child'] = $child;
+					$data['root_account'] = array_only($pool_ip->attributes, ['id', 'username', 'password', 'status', 'created_at']);
+				}
+			}
+
+			return $data;
+		}
+
+		throw new ApplicationException('No User Login.');
+	}
+
+	public function actionUserTunnelChild($action='', $data=[]){
+		if(!isset($data['id'])){
+			throw new ApplicationException('Select 1 item for delete.');
+		}
+
+		$check = ChildUser::find($data['id']);
+		
+		if($check && in_array($action, ['delete', 'enabled', 'disabled'])){
+			// action server
+			MikrotikProcess::withChain([
+				MikrotikProcess::actionSecret($action, [
+					'server_id'		=> $check->pool_ip->server_id,
+					'name'  		=> $check->user,
+				]),
+			])->dispatch();
+
+			switch ($action) {
+				case 'delete':
+					$check->delete();
+					break;
+				case 'enabled':
+					$check->status = 1;
+					$check->save();
+					break;
+				case 'disabled':
+					$check->status = 0;
+					$check->save();
+					break;
+				default:
+					break;
+			}
+
+			return [
+				'success'	=> true
+			];
+		}
+
+		return [
+			'success'	=> false
+		];
+	}
+
+	private function nextIp($ip, $next=1){
+		return long2ip(ip2long($ip)+$next);
+	}
+
+	public function generateStrongPassword($length = 9, $add_dashes = false, $available_sets = 'luds')
+	{
+		$sets = array();
+		if(strpos($available_sets, 'l') !== false)
+			$sets[] = 'abcdefghjkmnpqrstuvwxyz';
+		if(strpos($available_sets, 'u') !== false)
+			$sets[] = 'ABCDEFGHJKMNPQRSTUVWXYZ';
+		if(strpos($available_sets, 'd') !== false)
+			$sets[] = '23456789';
+		if(strpos($available_sets, 's') !== false)
+			$sets[] = '!@#$';
+		$all = '';
+		$password = '';
+		foreach($sets as $set)
+		{
+			$password .= $set[array_rand(str_split($set))];
+			$all .= $set;
+		}
+		$all = str_split($all);
+		for($i = 0; $i < $length - count($sets); $i++)
+			$password .= $all[array_rand($all)];
+		$password = str_shuffle($password);
+		if(!$add_dashes)
+			return $password;
+		$dash_len = floor(sqrt($length));
+		$dash_str = '';
+		while(strlen($password) > $dash_len)
+		{
+			$dash_str .= substr($password, 0, $dash_len) . '-';
+			$password = substr($password, $dash_len);
+		}
+		$dash_str .= $password;
+		return $dash_str;
+	}
 
 	public function requestNewGroupIp($parent_id=null, $size=self::GROUP_SIZE){
 		$group_name = null;

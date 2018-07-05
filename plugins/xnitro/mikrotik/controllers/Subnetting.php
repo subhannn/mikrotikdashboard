@@ -2,10 +2,14 @@
 
 use BackendMenu;
 use Backend\Classes\Controller;
-use Xnitro\Mikrotik\Classes\IPHelper;
+use IpHelper;
 use ApplicationException;
 use Redirect;
 use RainLab\User\Models\User;
+use Xnitro\Mikrotik\Models\Settings as SettingsModel;
+use Auth;
+use Crypt;
+use PEAR2\Net\RouterOS;
 
 /**
  * Subnetting Back-end Controller
@@ -19,9 +23,9 @@ class Subnetting extends Controller
 
     public $formConfig = 'config_form_assign.yaml';
     public $listConfig = [
-        'index' => 'config_list_group.yaml',
-        'group' => 'config_list_group.yaml',
-        'pool'  => 'config_list_pool.yaml'
+        'index' => 'config_list_pool.yaml',
+        // 'group' => 'config_list_group.yaml',
+        // 'pool'  => 'config_list_pool.yaml'
     ];
 
     private $listController = null;
@@ -31,6 +35,8 @@ class Subnetting extends Controller
 
     public $_var = [];
 
+    public $settings = null;
+
     public function __construct()
     {
         parent::__construct();
@@ -38,24 +44,53 @@ class Subnetting extends Controller
         BackendMenu::setContext('Xnitro.Mikrotik', 'subnetting');
 
         $this->listController = $this->asExtension('ListController');
+        $this->settings = SettingsModel::instance();
         // $this->formController = $this->asExtension('FormController');
+        $this->addJs('/plugins/xnitro/mikrotik/assets/js/subnetting.js');
+
+        $this->vars['activeServer'] = input('server', null);
     }
 
-    public function index($parent_id=null){
-        $this->definition = $parent_id==null?'index':'group';
-        $this->_var['parent_id'] = $parent_id;
-        $this->listController->setConfig('config_list_group.yaml');
+    public function index(){
+        BackendMenu::setContext('Xnitro.Mikrotik', 'subnetting', 'pool_ip');
 
         $this->listController->index();
+    }
+
+    public function onRequestPoolIp(){
+        $server = $this->settings->getMikrotikServer();
+        if($activeServer = $this->vars['activeServer']){
+            $server = array_where($server, function ($value, $key)use($activeServer) {
+                if($value['id'] == $activeServer){
+                    return $value;
+                }
+
+                return false;
+            });
+        }
+
+        $data = [
+            'server'    => $server
+        ];
+
+        return $this->makePartial('create_pool_form', $data);
+    }
+
+    public function onSubmitRequestPoolIp(){
+        $network_size = post('network_size', null);
+        $user = post('user', null);
+        $server = post('server');
+
+        IpHelper::requestNewPoolIp($network_size, $user, $server);
+
+        return Redirect::back()->with('message','Operation Successful !');
     }
 
     public function pool($group_id=null, $pool_id=null){
         $this->_var['group_id'] = $group_id;
         $this->_var['pool_id'] = $pool_id;
 
-        $helper = IPHelper::instance();
-
-        $data = $helper->assignIpForm($pool_id, true);
+        $data = IpHelper::assignIpForm($pool_id, true);
         $this->_var['available_ip'] = $data;
 
         $this->listController->index();
@@ -67,61 +102,51 @@ class Subnetting extends Controller
     }
 
     public function listExtendQueryBefore($query, $definition){
-        if($definition == 'group'){
-            $id = isset($this->_var['parent_id'])?$this->_var['parent_id']:(isset($this->params[0])?$this->params[0]:null);
-            if($id)
-                $query->where('parent_id', $id);
-        }elseif($definition == 'pool'){
-            $id = isset($this->_var['pool_id'])?$this->_var['pool_id']:(isset($this->params[1])?$this->params[1]:null);
-            if($id)
-                $query->where('group_id', $id);
-        }elseif($definition == 'index'){
-            $query->where('parent_id', 0);
+        if($this->vars['activeServer']){
+            $query->where('server_id', $this->vars['activeServer']);
         }
     }
 
     public function listOverrideColumnValue($record, $columnName, $definition){
-        if($columnName == 'ip' && $definition != 'pool'){
-            return $record->ip.'/'.$record->size;
-        }elseif($columnName == 'range_ip'){
-            return $record->meta['first_usable_ip'].' - '.$record->meta['last_usable_ip'];
-        }elseif($columnName == 'used'){
-            $count = count($record->pool_ip);
-            return ' '.$count;
-        }elseif($columnName == 'remain'){
-            $count = count($record->pool_ip);
-            $remain = $record->meta['usable_ip'] - $count;
-            return ' '.$remain;
-        }
+        // if($columnName == 'ip' && $definition != 'pool'){
+        //     return $record->ip.'/'.$record->size;
+        // }elseif($columnName == 'range_ip'){
+        //     return $record->meta['first_usable_ip'].' - '.$record->meta['last_usable_ip'];
+        // }elseif($columnName == 'used'){
+        //     $count = count($record->pool_ip);
+        //     return ' '.$count;
+        // }elseif($columnName == 'remain'){
+        //     $count = count($record->pool_ip);
+        //     $remain = $record->meta['usable_ip'] - $count;
+        //     return ' '.$remain;
+        // }
     }
 
     public function listExtendColumns($widget){
-        $group_id = isset($this->_var['parent_id'])?$this->_var['parent_id']:(isset($this->params[0])?$this->params[0]:null);
-        if($group_id && count($this->params) == 1){
-            $widget->recordUrl = 'xnitro/mikrotik/subnetting/pool/'.$group_id.'/:id';
+        // $group_id = isset($this->_var['parent_id'])?$this->_var['parent_id']:(isset($this->params[0])?$this->params[0]:null);
+        // if($group_id && count($this->params) == 1){
+        //     $widget->recordUrl = 'xnitro/mikrotik/subnetting/pool/'.$group_id.'/:id';
 
-            $widget->addColumns([
-                'range_ip'  => [
-                    'label' => 'Usable Range IP',
-                    'type'  => 'text'
-                ],
-                'used'  => [
-                    'label' => 'Used IP',
-                    'type'  => 'text'
-                ],
-                'remain'    => [
-                    'label' => 'Remains',
-                    'type'  => 'text'
-                ]
-            ]);
-        }else{
-            $widget->recordUrl = 'xnitro/mikrotik/subnetting/index/:id';
-        }
+        //     $widget->addColumns([
+        //         'range_ip'  => [
+        //             'label' => 'Usable Range IP',
+        //             'type'  => 'text'
+        //         ],
+        //         'used'  => [
+        //             'label' => 'Used IP',
+        //             'type'  => 'text'
+        //         ],
+        //         'remain'    => [
+        //             'label' => 'Remains',
+        //             'type'  => 'text'
+        //         ]
+        //     ]);
+        // }else{
+        //     $widget->recordUrl = 'xnitro/mikrotik/subnetting/index/:id';
+        // }
     }
 
     public function onRequestGroup(){
-        $helper = IPHelper::instance();
-
         $parent_id = post('parent_id', null);
         // $network_size = post('network_size', null);
         if($parent_id){
@@ -129,11 +154,11 @@ class Subnetting extends Controller
             //     throw new ApplicationException('Network Size Not Found');
             //     return false;
             // }
-            $network_size = IPHelper::POOL_SIZE;
+            $network_size = IpHelper::POOL_SIZE;
 
-            $helper->requestNewGroupIp($parent_id, $network_size);
+            IpHelper::requestNewGroupIp($parent_id, $network_size);
         }else{
-            $helper->requestNewGroupIp();
+            IpHelper::requestNewGroupIp();
         }
 
         return Redirect::back()->with('message','Operation Successful !');
@@ -141,9 +166,8 @@ class Subnetting extends Controller
 
     public function onRequestFormAssignIP(){
         $pool_id = post('pool_id', null);
-        $helper = IPHelper::instance();
 
-        $data = $helper->assignIpForm($pool_id);
+        $data = IpHelper::assignIpForm($pool_id);
         $data['pool_id'] = $pool_id;
 
         return $this->makePartial('form_assign', $data);
@@ -182,9 +206,8 @@ class Subnetting extends Controller
         $pool_id = post('pool_id', null);
         $number_ip = post('number_ip', null);
         $user = post('user', null);
-        $helper = IPHelper::instance();
 
-        $helper->assignIp($pool_id, $number_ip, $user);
+        IpHelper::assignIp($pool_id, $number_ip, $user);
 
         return Redirect::back()->with('message','Operation Successful !');
     }

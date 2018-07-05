@@ -33,7 +33,9 @@
         "october/cms": "~1.0",
         "laravel/framework": "5.5.*",
         "wikimedia/composer-merge-plugin": "dev-master",
-        "markrogoyski/ipv4-subnet-calculator": "^2.1"
+        "markrogoyski/ipv4-subnet-calculator": "^2.1",
+        "pear2/net_routeros": "*@beta",
+        "pear2/cache_shm": "*@alpha"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.7",

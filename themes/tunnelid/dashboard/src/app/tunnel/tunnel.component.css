@@ -1,0 +1,17 @@
+.editing{
+	position: relative;
+}
+.editing > input{
+	position: absolute;
+    left: 12px;
+    top: 5px;
+    display: block;
+    width: 90%;
+}
+
+.mat-progress-bar-buffer {
+    background-color: #bbdefb;
+}
+.mat-progress-bar-fill::after{
+	background-color: #1e88e5;
+}

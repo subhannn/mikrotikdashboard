@@ -1,0 +1,45 @@
+tabs:
+    fields:
+        server:
+            label: 'Server Mikrotik'
+            prompt: 'Add Server'
+            span: full
+            type: repeater
+            tab: Connection
+            form:
+                fields:
+                    id:
+                        label: 'ID'
+                        type: text
+                        cssClass: 'hide'
+                    name:
+                        span: auto
+                        label: 'Mikrotik Name'
+                        comment: 'Set Mikrotik Name Here for Identifier.'
+                        type: text
+                    host:
+                        span: auto
+                        label: 'Mikrotik Host'
+                        comment: 'Set Mikrotik Host Here.'
+                        type: text
+                    user:
+                        span: auto
+                        label: 'Mikrotik Username'
+                        comment: 'Set Mikrotik Username Here.'
+                        type: text
+                    pass:
+                        span: auto
+                        label: 'Mikrotik Password'
+                        comment: 'Set Mikrotik Password Here.'
+                        type: text
+                    port:
+                        span: auto
+                        label: 'Mikrotik Port'
+                        comment: 'Set Mikrotik Port Here.'
+                        type: number
+                    default_server:
+                        span: auto
+                        label: 'Defaul Mikrotik Server'
+                        type: checkbox
+                        comment: 'Check if want set this default server.'
+                        default: false

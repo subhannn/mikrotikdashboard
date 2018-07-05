@@ -1,0 +1,9 @@
+scopes:
+    size:
+        label: Network Size
+        type: group
+        conditions: size in (:filtered)
+        options:
+            '30' : '30'
+            '29' : '29'
+            '28' : '28'
