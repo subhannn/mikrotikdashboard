@@ -12,9 +12,38 @@
     <div class="col-lg-12">
         <div class="card">
             <div class="card-block">
+                <h4 class="card-title">Root User Tunnel Login</h4>
+                <h6 class="card-subtitle">Root credential for tunnel login.</h6>
+                <div *ngIf="tunnel">
+                    <div class="row">
+                        <h5 class="col-md-2 text-right text-muted">Host IP</h5>
+                        <h5 class="col-md-4">{{ tunnel.root_account.host_ip }}</h5>
+                    </div>
+                    <div class="row">
+                        <h5 class="col-md-2 text-right text-muted">Port</h5>
+                        <h5 class="col-md-4">{{ tunnel.root_account.host_port }}</h5>
+                    </div>
+                    <div class="row">
+                        <h5 class="col-md-2 text-right text-muted">Tunnel Username</h5>
+                        <h5 class="col-md-4">{{ tunnel.root_account.username }}</h5>
+                    </div>
+                    <div class="row">
+                        <h5 class="col-md-2 text-right text-muted">Tunnel Password</h5>
+                        <h5 class="col-md-4">{{ tunnel.root_account.password }}</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row" *ngIf="userService.checkPermissions('child_user_manage')">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-block">
                 <div class="card-title row">
                 	<div class="col-md-10">
-                		<h4>Login Access Tunnel</h4>
+                		<h4>Sub User Tunnel Login</h4>
                 	</div>
                 	<div class="col-md-2">
                 		<button class="btn waves-effect waves-light btn-primary pull-right hidden-sm-down" *ngIf="tunnel" [disabled]="tunnel.max_child_account==0" (click)="onClick()">Create New User</button>
@@ -40,7 +69,7 @@
                                 <td>{{ i+1 }}</td>
                             	<td ><span>{{ item.user }}</span></td>
                                 <td ><span>{{ item.pass }}</span></td>
-                                <td ><mat-slide-toggle [checked]="!!+item.status" (change)="onChangeStatus(i, $event)"></mat-slide-toggle></td>
+                                <td ><mat-slide-toggle [color]="'primary'" [checked]="!!+item.status" (change)="onChangeStatus(i, $event)"></mat-slide-toggle></td>
                                 <td >{{ item.created_at|date:'d MMM yyyy h:mm a' }}</td>
                                 <td ><button data-toggle="tooltip" title="Delete" (click)="onDelete(i)" class="btn-xs waves-effect waves-light btn-danger"><i class="mdi mdi-window-close"></i></button></td>
                             </tr>

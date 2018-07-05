@@ -196,10 +196,7 @@ var AppModule = /** @class */ (function () {
             ],
             imports: [
                 _angular_platform_browser_animations__WEBPACK_IMPORTED_MODULE_3__["BrowserAnimationsModule"],
-                _angular_material__WEBPACK_IMPORTED_MODULE_4__["MatProgressBarModule"],
-                _angular_material__WEBPACK_IMPORTED_MODULE_4__["MatProgressSpinnerModule"],
-                _angular_material__WEBPACK_IMPORTED_MODULE_4__["MatDialogModule"],
-                _angular_material__WEBPACK_IMPORTED_MODULE_4__["MatSlideToggleModule"],
+                _angular_material__WEBPACK_IMPORTED_MODULE_4__["MatProgressBarModule"], _angular_material__WEBPACK_IMPORTED_MODULE_4__["MatProgressSpinnerModule"], _angular_material__WEBPACK_IMPORTED_MODULE_4__["MatDialogModule"], _angular_material__WEBPACK_IMPORTED_MODULE_4__["MatSlideToggleModule"], _angular_material__WEBPACK_IMPORTED_MODULE_4__["MatMenuModule"], _angular_material__WEBPACK_IMPORTED_MODULE_4__["MatIconModule"], _angular_material__WEBPACK_IMPORTED_MODULE_4__["MatButtonModule"],
                 _angular_platform_browser__WEBPACK_IMPORTED_MODULE_0__["BrowserModule"],
                 _angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpClientModule"],
                 _app_routing_module__WEBPACK_IMPORTED_MODULE_6__["AppRoutingModule"],
@@ -238,7 +235,7 @@ module.exports = ""
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<nav class=\"navbar top-navbar navbar-toggleable-sm navbar-light\">\n    <!-- ============================================================== -->\n    <!-- Logo -->\n    <!-- ============================================================== -->\n    <div class=\"navbar-header\">\n        <a class=\"navbar-brand\" [routerLink]=\"['/']\">\n            <!-- Logo icon --><b>\n                <!--You can put here icon as well // <i class=\"wi wi-sunset\"></i> //-->\n                \n                <!-- Light Logo icon -->\n                <img src=\"/themes/tunnelid/dashboard/assets/images/logo-light-icon.png\" alt=\"homepage\" class=\"light-logo\" />\n            </b>\n            <!--End Logo icon -->\n            <!-- Logo text --><span>\n             \n             <!-- Light Logo text -->    \n             <img src=\"/themes/tunnelid/dashboard/assets/images/logo-light-text.png\" class=\"light-logo\" alt=\"homepage\" /></span> </a>\n    </div>\n    <!-- ============================================================== -->\n    <!-- End Logo -->\n    <!-- ============================================================== -->\n    <div class=\"navbar-collapse\">\n        <!-- ============================================================== -->\n        <!-- toggle and nav items -->\n        <!-- ============================================================== -->\n        <ul class=\"navbar-nav mr-auto mt-md-0\">\n        \t<li class=\"nav-item\"> <a class=\"nav-link nav-toggler hidden-md-up text-muted waves-effect waves-dark\" href=\"javascript:void(0)\"><i class=\"mdi mdi-menu ti-close\"></i></a>\n        \t</li>\n        </ul>\n        <!-- ============================================================== -->\n        <!-- User profile and search -->\n        <!-- ============================================================== -->\n        <ul class=\"navbar-nav my-lg-0\" *ngIf=\"currentUser.name\">\n            <!-- ============================================================== -->\n            <!-- Profile -->\n            <!-- ============================================================== -->\n            <li class=\"nav-item dropdown\">\n                <a class=\"nav-link dropdown-toggle text-muted waves-effect waves-dark\" href=\"\" data-toggle=\"dropdown\" aria-haspopup=\"true\" aria-expanded=\"false\"><img src=\"{{ currentUser.image }}\" alt=\"user\" class=\"profile-pic m-r-10\" />{{ currentUser.name }} {{ currentUser.surname }}</a>\n            </li>\n        </ul>\n    </div>\n</nav>"
+module.exports = "<nav class=\"navbar top-navbar navbar-toggleable-sm navbar-light\">\n    <!-- ============================================================== -->\n    <!-- Logo -->\n    <!-- ============================================================== -->\n    <div class=\"navbar-header\">\n        <a class=\"navbar-brand\" [routerLink]=\"['/']\">\n            <!-- Logo icon --><b>\n                <!--You can put here icon as well // <i class=\"wi wi-sunset\"></i> //-->\n                \n                <!-- Light Logo icon -->\n                <img src=\"/themes/tunnelid/dashboard/assets/images/logo-light-icon.png\" alt=\"homepage\" class=\"light-logo\" />\n            </b>\n            <!--End Logo icon -->\n            <!-- Logo text --><span>\n             \n             <!-- Light Logo text -->    \n             <img src=\"/themes/tunnelid/dashboard/assets/images/logo-light-text.png\" class=\"light-logo\" alt=\"homepage\" /></span> </a>\n    </div>\n    <!-- ============================================================== -->\n    <!-- End Logo -->\n    <!-- ============================================================== -->\n    <div class=\"navbar-collapse\">\n        <!-- ============================================================== -->\n        <!-- toggle and nav items -->\n        <!-- ============================================================== -->\n        <ul class=\"navbar-nav mr-auto mt-md-0\">\n        \t<li class=\"nav-item\"> <a class=\"nav-link nav-toggler hidden-md-up text-muted waves-effect waves-dark\" href=\"javascript:void(0)\"><i class=\"mdi mdi-menu ti-close\"></i></a>\n        \t</li>\n        </ul>\n        <!-- ============================================================== -->\n        <!-- User profile and search -->\n        <!-- ============================================================== -->\n        <ul class=\"navbar-nav my-lg-0\" *ngIf=\"currentUser.fullname\">\n            <!-- ============================================================== -->\n            <!-- Profile -->\n            <!-- ============================================================== -->\n            <li class=\"nav-item dropdown\">\n                <a [matMenuTriggerFor]=\"menu\" class=\"nav-link dropdown-toggle text-muted waves-effect waves-dark\">\n                    <img *ngIf=\"currentUser.image\" src=\"{{ currentUser.image }}\" alt=\"user\" class=\"profile-pic m-r-10\" />\n                    <img *ngIf=\"!currentUser.image\" src=\"/themes/tunnelid/assets/images/default_user.jpg\" alt=\"user\" class=\"profile-pic m-r-10\" />\n                    {{ currentUser.fullname }}\n                </a>\n            </li>\n        </ul>\n    </div>\n</nav>\n<mat-menu #menu=\"matMenu\" class=\"mymegamenu\" yPosition=\"below\" [overlapTrigger]=\"false\">\n    <button mat-menu-item class=\"item\" (click)=\"onSignOut()\"><i class=\"mdi mdi-logout\"></i> Sign Out </button>\n</mat-menu>"
 
 /***/ }),
 
@@ -274,6 +271,9 @@ var HeadBarComponent = /** @class */ (function () {
         this.userService.currentUser.subscribe(function (userData) {
             _this.currentUser = userData;
         });
+    };
+    HeadBarComponent.prototype.onSignOut = function () {
+        this.userService.signout();
     };
     HeadBarComponent = __decorate([
         Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"])({
@@ -387,18 +387,20 @@ var ApiService = /** @class */ (function () {
     function ApiService(http) {
         this.http = http;
     }
-    ApiService.prototype.setHeaders = function (handler) {
+    ApiService.prototype.setHeaders = function (handler, octoberComponent) {
+        if (octoberComponent === void 0) { octoberComponent = 'mikrotikDashboard'; }
         var headersConfig = {
-            'x-october-request-handler': 'mikrotikDashboard::' + handler,
+            'x-october-request-handler': octoberComponent + '::' + handler,
             'x-requested-with': 'XMLHttpRequest',
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
         };
         return new _angular_common_http__WEBPACK_IMPORTED_MODULE_1__["HttpHeaders"](headersConfig);
     };
-    ApiService.prototype.request = function (handler, body) {
+    ApiService.prototype.request = function (handler, body, octoberComponent) {
         if (body === void 0) { body = {}; }
+        if (octoberComponent === void 0) { octoberComponent = 'mikrotikDashboard'; }
         return this.http.post(window.location.origin + window.location.pathname, jquery__WEBPACK_IMPORTED_MODULE_4__["param"](body), {
-            headers: this.setHeaders(handler)
+            headers: this.setHeaders(handler, octoberComponent)
         })
             .pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_3__["catchError"])(this.handleError(handler)));
     };
@@ -549,12 +551,13 @@ module.exports = "<div class=\"clear\">\r\n\t<div class=\"mat-dialog-content\">{
 /*!******************************************!*\
   !*** ./src/app/services/user.service.ts ***!
   \******************************************/
-/*! exports provided: UserService */
+/*! exports provided: UserService, User */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "UserService", function() { return UserService; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "User", function() { return User; });
 /* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
 /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! rxjs */ "./node_modules/rxjs/_esm5/index.js");
 /* harmony import */ var _api_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./api.service */ "./src/app/services/api.service.ts");
@@ -576,7 +579,7 @@ var __metadata = (undefined && undefined.__metadata) || function (k, v) {
 var UserService = /** @class */ (function () {
     function UserService(apiService) {
         this.apiService = apiService;
-        this.currentUserSubject = new rxjs__WEBPACK_IMPORTED_MODULE_1__["BehaviorSubject"](Object);
+        this.currentUserSubject = new rxjs__WEBPACK_IMPORTED_MODULE_1__["BehaviorSubject"](new User);
         this.currentUser = this.currentUserSubject.asObservable();
     }
     UserService.prototype.populate = function () {
@@ -585,11 +588,24 @@ var UserService = /** @class */ (function () {
             .subscribe(function (response) { return _this.setAuth(response); }, function (err) { return _this.purgeAuth(); });
     };
     UserService.prototype.setAuth = function (user) {
-        if (user === void 0) { user = {}; }
         // hide loader
         jquery__WEBPACK_IMPORTED_MODULE_3__(".preloader").fadeOut();
         // save active user
         this.currentUserSubject.next(user);
+        this.userObj = user;
+    };
+    UserService.prototype.checkPermissions = function (index) {
+        if (typeof this.userObj != 'undefined' && this.userObj.permissions.indexOf(index) >= 0) {
+            return true;
+        }
+        return false;
+    };
+    UserService.prototype.signout = function () {
+        var _this = this;
+        this.apiService.request('onLogout', {
+            redirect: '/'
+        }, 'session')
+            .subscribe(function (response) { return window.location.href = response.X_OCTOBER_REDIRECT; }, function (err) { return _this.purgeAuth(); });
     };
     UserService.prototype.purgeAuth = function () {
     };
@@ -598,6 +614,12 @@ var UserService = /** @class */ (function () {
         __metadata("design:paramtypes", [_api_service__WEBPACK_IMPORTED_MODULE_2__["ApiService"]])
     ], UserService);
     return UserService;
+}());
+
+var User = /** @class */ (function () {
+    function User() {
+    }
+    return User;
 }());
 
 
@@ -685,7 +707,7 @@ module.exports = ".editing{\r\n\tposition: relative;\r\n}\r\n.editing > input{\r
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"row page-titles\">\n    <div class=\"col-md-12 col-12 align-self-center\">\n        <h3 class=\"text-themecolor\">Tunnel</h3>\n        <ol class=\"breadcrumb\">\n            <li class=\"breadcrumb-item\"><a [routerLink]=\"['/']\">Home</a></li>\n            <li class=\"breadcrumb-item active\">Tunnel</li>\n        </ol>\n    </div>\n</div>\n\n<div class=\"row\">\n    <div class=\"col-lg-12\">\n        <div class=\"card\">\n            <div class=\"card-block\">\n                <div class=\"card-title row\">\n                \t<div class=\"col-md-10\">\n                \t\t<h4>Login Access Tunnel</h4>\n                \t</div>\n                \t<div class=\"col-md-2\">\n                \t\t<button class=\"btn waves-effect waves-light btn-primary pull-right hidden-sm-down\" *ngIf=\"tunnel\" [disabled]=\"tunnel.max_child_account==0\" (click)=\"onClick()\">Create New User</button>\n                \t</div>\n                </div>\n                <h6 *ngIf=\"tunnel\" class=\"card-subtitle\">Maximum you can create Child user is : <code>{{ tunnel.max_child_account }}</code></h6>\n                <mat-progress-bar *ngIf=\"loading\" mode=\"indeterminate\"></mat-progress-bar>\n                <div class=\"table-responsive\" *ngIf=\"tunnel\">\n                    <table class=\"table\">\n                        <thead>\n                            <tr>\n                                <th>#</th>\n                                <th>Username</th>\n                                <th>Password</th>\n                                <th>Status</th>\n                                <th>Created Date</th>\n                                <th>&nbsp;</th>\n                            </tr>\n                        </thead>\n                        <tbody>\n\n                            <tr *ngFor=\"let item of tunnel.child; let i = index\">\n                                <td>{{ i+1 }}</td>\n                            \t<td ><span>{{ item.user }}</span></td>\n                                <td ><span>{{ item.pass }}</span></td>\n                                <td ><mat-slide-toggle [checked]=\"!!+item.status\" (change)=\"onChangeStatus(i, $event)\"></mat-slide-toggle></td>\n                                <td >{{ item.created_at|date:'d MMM yyyy h:mm a' }}</td>\n                                <td ><button data-toggle=\"tooltip\" title=\"Delete\" (click)=\"onDelete(i)\" class=\"btn-xs waves-effect waves-light btn-danger\"><i class=\"mdi mdi-window-close\"></i></button></td>\n                            </tr>\n                        </tbody>\n                    </table>\n                </div>\n            </div>\n        </div>\n    </div>\n</div>"
+module.exports = "<div class=\"row page-titles\">\n    <div class=\"col-md-12 col-12 align-self-center\">\n        <h3 class=\"text-themecolor\">Tunnel</h3>\n        <ol class=\"breadcrumb\">\n            <li class=\"breadcrumb-item\"><a [routerLink]=\"['/']\">Home</a></li>\n            <li class=\"breadcrumb-item active\">Tunnel</li>\n        </ol>\n    </div>\n</div>\n\n<div class=\"row\">\n    <div class=\"col-lg-12\">\n        <div class=\"card\">\n            <div class=\"card-block\">\n                <h4 class=\"card-title\">Root User Tunnel Login</h4>\n                <h6 class=\"card-subtitle\">Root credential for tunnel login.</h6>\n                <div *ngIf=\"tunnel\">\n                    <div class=\"row\">\n                        <h5 class=\"col-md-2 text-right text-muted\">Host IP</h5>\n                        <h5 class=\"col-md-4\">{{ tunnel.root_account.host_ip }}</h5>\n                    </div>\n                    <div class=\"row\">\n                        <h5 class=\"col-md-2 text-right text-muted\">Port</h5>\n                        <h5 class=\"col-md-4\">{{ tunnel.root_account.host_port }}</h5>\n                    </div>\n                    <div class=\"row\">\n                        <h5 class=\"col-md-2 text-right text-muted\">Tunnel Username</h5>\n                        <h5 class=\"col-md-4\">{{ tunnel.root_account.username }}</h5>\n                    </div>\n                    <div class=\"row\">\n                        <h5 class=\"col-md-2 text-right text-muted\">Tunnel Password</h5>\n                        <h5 class=\"col-md-4\">{{ tunnel.root_account.password }}</h5>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n</div>\n\n<div class=\"row\" *ngIf=\"userService.checkPermissions('child_user_manage')\">\n    <div class=\"col-lg-12\">\n        <div class=\"card\">\n            <div class=\"card-block\">\n                <div class=\"card-title row\">\n                \t<div class=\"col-md-10\">\n                \t\t<h4>Sub User Tunnel Login</h4>\n                \t</div>\n                \t<div class=\"col-md-2\">\n                \t\t<button class=\"btn waves-effect waves-light btn-primary pull-right hidden-sm-down\" *ngIf=\"tunnel\" [disabled]=\"tunnel.max_child_account==0\" (click)=\"onClick()\">Create New User</button>\n                \t</div>\n                </div>\n                <h6 *ngIf=\"tunnel\" class=\"card-subtitle\">Maximum you can create Child user is : <code>{{ tunnel.max_child_account }}</code></h6>\n                <mat-progress-bar *ngIf=\"loading\" mode=\"indeterminate\"></mat-progress-bar>\n                <div class=\"table-responsive\" *ngIf=\"tunnel\">\n                    <table class=\"table\">\n                        <thead>\n                            <tr>\n                                <th>#</th>\n                                <th>Username</th>\n                                <th>Password</th>\n                                <th>Status</th>\n                                <th>Created Date</th>\n                                <th>&nbsp;</th>\n                            </tr>\n                        </thead>\n                        <tbody>\n\n                            <tr *ngFor=\"let item of tunnel.child; let i = index\">\n                                <td>{{ i+1 }}</td>\n                            \t<td ><span>{{ item.user }}</span></td>\n                                <td ><span>{{ item.pass }}</span></td>\n                                <td ><mat-slide-toggle [color]=\"'primary'\" [checked]=\"!!+item.status\" (change)=\"onChangeStatus(i, $event)\"></mat-slide-toggle></td>\n                                <td >{{ item.created_at|date:'d MMM yyyy h:mm a' }}</td>\n                                <td ><button data-toggle=\"tooltip\" title=\"Delete\" (click)=\"onDelete(i)\" class=\"btn-xs waves-effect waves-light btn-danger\"><i class=\"mdi mdi-window-close\"></i></button></td>\n                            </tr>\n                        </tbody>\n                    </table>\n                </div>\n            </div>\n        </div>\n    </div>\n</div>"
 
 /***/ }),
 
@@ -703,6 +725,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
 /* harmony import */ var _services_ip_service__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../services/ip.service */ "./src/app/services/ip.service.ts");
 /* harmony import */ var _services_modal_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../services/modal.service */ "./src/app/services/modal.service.ts");
+/* harmony import */ var _services_user_service__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../services/user.service */ "./src/app/services/user.service.ts");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -715,10 +738,12 @@ var __metadata = (undefined && undefined.__metadata) || function (k, v) {
 
 
 
+
 var TunnelComponent = /** @class */ (function () {
-    function TunnelComponent(ipService, modal) {
+    function TunnelComponent(ipService, modal, userService) {
         this.ipService = ipService;
         this.modal = modal;
+        this.userService = userService;
         this.loading = false;
     }
     TunnelComponent.prototype.ngOnInit = function () {
@@ -792,7 +817,8 @@ var TunnelComponent = /** @class */ (function () {
             styles: [__webpack_require__(/*! ./tunnel.component.css */ "./src/app/tunnel/tunnel.component.css")]
         }),
         __metadata("design:paramtypes", [_services_ip_service__WEBPACK_IMPORTED_MODULE_1__["IpService"],
-            _services_modal_service__WEBPACK_IMPORTED_MODULE_2__["ModalService"]])
+            _services_modal_service__WEBPACK_IMPORTED_MODULE_2__["ModalService"],
+            _services_user_service__WEBPACK_IMPORTED_MODULE_3__["UserService"]])
     ], TunnelComponent);
     return TunnelComponent;
 }());

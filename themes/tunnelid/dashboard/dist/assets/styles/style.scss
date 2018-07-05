@@ -21,5 +21,15 @@ File: scss
 
 
 
+/* Custom */
+.mymegamenu{
+	min-width: 210px !important;
+}
 
-  
+.mymegamenu .item > i{
+	margin-right: 10px;
+}
+
+button:focus{
+	outline: none !important;
+}

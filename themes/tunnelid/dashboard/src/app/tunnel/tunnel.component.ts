@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 
 import { IpService } from '../services/ip.service';
 import { ModalService } from '../services/modal.service';
+import { UserService } from '../services/user.service';
 
 @Component({
   selector: 'app-tunnel',
@@ -13,6 +14,7 @@ export class TunnelComponent implements OnInit {
   constructor(
   	private ipService: IpService,
   	private modal: ModalService,
+    public userService: UserService
   ) { }
 
   tunnel: Tunnel;
@@ -93,7 +95,7 @@ export class TunnelComponent implements OnInit {
 }
 
 export class Tunnel {
-	child: Child[];
+	child: Object[];
 	max_child_account: number = 0;
 	root_account: Object
 }

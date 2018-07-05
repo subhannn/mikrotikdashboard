@@ -30,13 +30,20 @@
         <!-- ============================================================== -->
         <!-- User profile and search -->
         <!-- ============================================================== -->
-        <ul class="navbar-nav my-lg-0" *ngIf="currentUser.name">
+        <ul class="navbar-nav my-lg-0" *ngIf="currentUser.fullname">
             <!-- ============================================================== -->
             <!-- Profile -->
             <!-- ============================================================== -->
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle text-muted waves-effect waves-dark" href="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img src="{{ currentUser.image }}" alt="user" class="profile-pic m-r-10" />{{ currentUser.name }} {{ currentUser.surname }}</a>
+                <a [matMenuTriggerFor]="menu" class="nav-link dropdown-toggle text-muted waves-effect waves-dark">
+                    <img *ngIf="currentUser.image" src="{{ currentUser.image }}" alt="user" class="profile-pic m-r-10" />
+                    <img *ngIf="!currentUser.image" src="/themes/tunnelid/assets/images/default_user.jpg" alt="user" class="profile-pic m-r-10" />
+                    {{ currentUser.fullname }}
+                </a>
             </li>
         </ul>
     </div>
 </nav>
+<mat-menu #menu="matMenu" class="mymegamenu" yPosition="below" [overlapTrigger]="false">
+    <button mat-menu-item class="item" (click)="onSignOut()"><i class="mdi mdi-logout"></i> Sign Out </button>
+</mat-menu>

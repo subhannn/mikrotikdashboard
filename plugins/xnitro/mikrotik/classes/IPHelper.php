@@ -148,7 +148,10 @@ class IPHelper{
 				$child = $pool_ip->child_user()->AllChildUser()->toArray();
 				$data['max_child_account'] = ($max_child - count($child));
 				$data['child'] = $child;
-				$data['root_account'] = array_only($pool_ip->attributes, ['id', 'username', 'password', 'status', 'created_at']);
+				$root_account = array_only($pool_ip->attributes, ['id', 'username', 'password', 'status', 'created_at']);
+				$root_account['host_ip'] = $pool_ip->server->host;
+				$root_account['host_port'] = $pool_ip->server->port;
+				$data['root_account'] = $root_account;
 			}
 
 			return $data;
@@ -243,6 +246,35 @@ class IPHelper{
 		];
 	}
 
+	public function getActiveUserData(){
+        if($this->user){
+            // $data = array_only($user->attributes, ['id', 'name', 'surname', 'email', 'username']);
+            $user_attributes = $this->user->attributes;
+            $data = [
+            	'id'		=> $this->user->id,
+            	'fullname'	=> implode(' ', array_only($user_attributes, ['name', 'surname'])),
+            	'email'		=> $user_attributes['email'],
+            	'image'		=> ($this->user->avatar)?$this->user->avatar->getThumb(200, 200):null,
+            	'permissions'=> $this->userPermissions()
+            ];
+            
+            return $data;
+        }
+
+        return false;
+	}
+
+	private function userPermissions(){
+		$data = [];
+		// Check User Child Tunnel
+		$user_child = PoolIp::where('user_id', $this->user->id)->first();
+		if($user_child && $user_child->size != '30'){
+			$data[] = 'child_user_manage';
+		}
+
+		return $data;
+	}
+
 	private function nextIp($ip, $next=1){
 		return long2ip(ip2long($ip)+$next);
 	}
@@ -281,7 +313,7 @@ class IPHelper{
 		$dash_str .= $password;
 		return $dash_str;
 	}
-	
+
 	// public function requestNewGroupIp($parent_id=null, $size=self::GROUP_SIZE){
 	// 	$group_name = null;
 	// 	if($parent_id != null){

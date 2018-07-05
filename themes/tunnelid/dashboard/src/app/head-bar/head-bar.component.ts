@@ -23,4 +23,7 @@ export class HeadBarComponent implements OnInit {
   	)
   }
 
+  onSignOut(){
+    this.userService.signout()
+  }
 }

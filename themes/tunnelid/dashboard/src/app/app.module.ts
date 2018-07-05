@@ -3,7 +3,8 @@ import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-import {MatProgressBarModule, MatProgressSpinnerModule, MatDialogModule,MatSlideToggleModule} from '@angular/material';
+import {MatProgressBarModule, MatProgressSpinnerModule, MatDialogModule,MatSlideToggleModule, MatMenuModule,
+  MatIconModule,MatButtonModule} from '@angular/material';
 
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
@@ -27,10 +28,7 @@ import { ModalService, ConfirmationModalComponent } from './services/modal.servi
   ],
   imports: [
     BrowserAnimationsModule,
-    MatProgressBarModule,
-    MatProgressSpinnerModule,
-    MatDialogModule,
-    MatSlideToggleModule,
+    MatProgressBarModule,MatProgressSpinnerModule,MatDialogModule,MatSlideToggleModule,MatMenuModule,MatIconModule,MatButtonModule,
 
     BrowserModule,
     HttpClientModule,

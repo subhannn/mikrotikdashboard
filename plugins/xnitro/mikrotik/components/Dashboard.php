@@ -26,15 +26,7 @@ class Dashboard extends ComponentBase
     }
 
     public function onCheckUser(){
-        $user = Auth::getUser();
-        if($user){
-            $data = array_only($user->attributes, ['id', 'name', 'surname', 'email', 'username']);
-            $data['image'] = $user->avatar->getThumb(200, 200);
-            
-            return $data;
-        }
-
-        return false;
+        return IpHelper::getActiveUserData();
     }
 
     public function onGetData(){

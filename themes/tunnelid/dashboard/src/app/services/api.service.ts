@@ -14,9 +14,9 @@ export class ApiService {
   	private http: HttpClient
   ) { }
 
-  private setHeaders(handler: string): HttpHeaders {
+  private setHeaders(handler: string, octoberComponent: string = 'mikrotikDashboard'): HttpHeaders {
   	const headersConfig = {
-      'x-october-request-handler': 'mikrotikDashboard::'+handler,
+      'x-october-request-handler': octoberComponent+'::'+handler,
       'x-requested-with': 'XMLHttpRequest',
       'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
     };
@@ -24,11 +24,11 @@ export class ApiService {
   	return new HttpHeaders(headersConfig)
   }
 
-  request(handler: string, body: Object = {}): Observable<any>{
+  request(handler: string, body: Object = {}, octoberComponent: string = 'mikrotikDashboard'): Observable<any>{
   	return this.http.post(window.location.origin+window.location.pathname, 
   		$.param(body), 
   		{ 
-  			headers: this.setHeaders(handler)
+  			headers: this.setHeaders(handler, octoberComponent)
   		})
   		.pipe(catchError(this.handleError(handler)))
   }
