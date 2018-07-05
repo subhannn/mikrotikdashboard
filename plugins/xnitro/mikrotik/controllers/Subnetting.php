@@ -106,4 +106,33 @@ class Subnetting extends Controller
             $query->where('server_id', $this->vars['activeServer']);
         }
     }
+
+    public function onSearchUser(){
+        $s = post('term', null);
+        $page = post('page', 1);
+        if($s){
+            $result = User::searchWhere($s, ['name', 'surname'])->paginate(10, $page);
+            if($result->total() > 0){
+                $data = [];
+                $data['pagination']['more'] = false;
+                if($result->hasMorePages()){
+                    $data['pagination']['more'] = true;
+                }
+                foreach ($result->items() as $row) {
+                    $data['results'][] = [
+                        'id'    => (string) $row->id,
+                        'text'  => (string) implode(' ', [$row->name, $row->surname])
+                    ];
+                }
+
+                return $data;
+            }
+        }
+
+        return [
+            'results'  => [
+                'results'   => []
+            ]
+        ];
+    }
 }
