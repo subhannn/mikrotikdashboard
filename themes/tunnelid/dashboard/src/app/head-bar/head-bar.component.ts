@@ -13,7 +13,7 @@ export class HeadBarComponent implements OnInit {
   	private userService: UserService
   ) { }
 
-  currentUser: Object;
+  currentUser;
 
   ngOnInit() {
   	this.userService.currentUser.subscribe(

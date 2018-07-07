@@ -60,6 +60,8 @@ class Dashboard extends ComponentBase
             case 'disabled_child_user':
                 return IpHelper::actionUserTunnelChild('disabled', $data);
                 break;
+            case 'change_tunnel_password':
+                return IpHelper::actionUserTunnelChild('change_password', $data);
             default:
                 break;
         }

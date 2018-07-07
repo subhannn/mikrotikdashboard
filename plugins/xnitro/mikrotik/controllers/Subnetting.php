@@ -55,6 +55,22 @@ class Subnetting extends Controller
         BackendMenu::setContext('Xnitro.Mikrotik', 'subnetting', 'pool_ip');
 
         $this->listController->index();
+        // $util = new RouterOS\Util(new RouterOS\Client(
+        //         '103.97.111.250', 
+        //         'tunnelid', 
+        //         'tunnelid'
+        //     ));
+        // $util->setMenu('/ppp secret');
+        // $name = 'subhannn_5Hk';
+        // $id = $util->find(function($response)use($name){
+        //     return preg_match('/^'.$name.'$/', $response->getProperty('name'));
+        // });
+        // $res = $util->set($id, [
+        //     'password'  => 'bebek'
+        // ]);
+        // echo '<pre>';
+        // print_r($res);
+        // exit();
     }
 
     public function onRequestPoolIp(){

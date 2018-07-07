@@ -52,6 +52,26 @@ export class TunnelComponent implements OnInit {
   		})
   }
 
+  onChangeRootPassword(newPass){
+    this.tunnel.root_account['password'] = newPass
+  }
+
+  onChangeChildPassword(newPass, index){
+    if(typeof this.tunnel.child[index] != 'undefined'){
+      this.ipService.apiService.request('onPostData', {
+        type: 'change_tunnel_password',
+        data: {
+          type: 'child',
+          id: this.tunnel.child[index]['id'],
+          password: newPass
+        }
+      })
+        .subscribe(
+          response => (this.tunnel.child[index]['password'] = newPass, this.loading = false)
+        )
+    }
+  }
+
   onChangeStatus(index, event: Event){
     if(typeof this.tunnel.child[index] == 'undefined')
       return false;

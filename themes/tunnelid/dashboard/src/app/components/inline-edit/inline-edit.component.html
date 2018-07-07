@@ -1,0 +1,17 @@
+<!-- <span [hidden]="activeEditing" class="value" appInlineEdit>{{ value }}</span>
+<input [hidden]="!activeEditing" value placeholder="{{ value }}" type="text" class="value editing"> -->
+
+<div class="inline-edit">
+    <span [hidden]="!isDisplay" class="edit-text" matTooltip="Click to Copy" [matTooltipPosition]="'above'" ngxClipboard [cbContent]="text" >
+        {{ text }}
+    </span>
+    <i [hidden]="!isDisplay" class="mdi mdi-pencil" matTooltip="Click to Edit" [matTooltipPosition]="'above'" (click)="edit(editText)"></i>
+    <span [hidden]="isDisplay" class="form-material">
+        <input #editText required type="text"
+        	(keyup.enter)="editDone()" 
+        	(keyup.esc)="cancelEdit()" (blur)="editDone()"
+        	(keypress)="limitChar($event)"
+        	[(ngModel)]="text" (ngModelChange)="onChange()"
+        	class="editing form-control" [ngClass]="{'error': isError}" spellcheck="false">
+    </span>
+</div>

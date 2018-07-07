@@ -1,0 +1,30 @@
+.inline-edit .edit-text{
+	cursor: pointer;
+	background-image: linear-gradient(#009efb, #009efb), linear-gradient(#d9d9d9, #d9d9d9);
+    background-color: transparent;
+    background-position: center bottom, center calc(100% - 1px);
+    background-repeat: no-repeat;
+    background-size: 0 2px, 100% 1px;
+    padding-bottom: 3px;
+    margin-right: 2px;
+}
+.inline-edit > i{
+	display: inline-block;
+    padding: 2px 2px;
+    cursor: pointer;
+}
+
+.inline-edit .editing.error{
+	background-image: linear-gradient(#f55656, #f55656), linear-gradient(#fb0000, #fb0000) !important;
+}
+
+.inline-edit .editing{
+	border: none;
+    padding-bottom: 4px;
+    font-family: inherit;
+    color: inherit;
+    outline: none;
+    min-height: auto;
+    line-height: inherit;
+    width: auto;
+}

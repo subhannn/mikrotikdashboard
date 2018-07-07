@@ -85,14 +85,20 @@ class MikrotikProcess implements ShouldQueue
     }
 
 	public function createRequest($endpoint='', $parameters=[]){
-        if(in_array($this->requestType, ['delete', 'enabled', 'disabled'])){
+        if(in_array($this->requestType, ['delete', 'enabled', 'disabled', 'change_password'])){
             $util = new RouterOS\Util($this->_routerConn);
             $util->setMenu($this->endpoint);
             $name = $parameters['name'];
             $id = $util->find(function($response)use($name){
                 return preg_match('/^'.$name.'$/', $response->getProperty('name'));
             });
+
             switch ($this->requestType) {
+                case 'change_password':
+                    return $util->set($id, [
+                        'password'  => $parameters['password']
+                    ]);
+                    break;
                 case 'delete':
                     return $util->remove($id);
                     break;

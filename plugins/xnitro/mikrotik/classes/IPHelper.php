@@ -144,14 +144,7 @@ class IPHelper{
 				'child'				=> []
 			];
 			if($pool_ip){
-				$max_child = (ip2long($pool_ip->usable_last_ip)-ip2long($pool_ip->ip));
-				$child = $pool_ip->child_user()->AllChildUser()->toArray();
-				$data['max_child_account'] = ($max_child - count($child));
-				$data['child'] = $child;
-				$root_account = array_only($pool_ip->attributes, ['id', 'username', 'password', 'status', 'created_at']);
-				$root_account['host_ip'] = $pool_ip->server->host;
-				$root_account['host_port'] = $pool_ip->server->port;
-				$data['root_account'] = $root_account;
+				return $this->getChildUserTunnel($pool_ip);
 			}
 
 			return $data;
@@ -174,8 +167,8 @@ class IPHelper{
 
 				$child = ChildUser::create([
 					'pool_ip_id'	=> $pool_ip->id,
-					'user'			=> $username,
-					'pass'			=> $password,
+					'username'		=> $username,
+					'password'		=> $password,
 					'status'		=> 1
 				]);
 
@@ -190,11 +183,7 @@ class IPHelper{
 						]),
 					])->dispatch();
 
-					$max_child = (ip2long($pool_ip->usable_last_ip)-ip2long($pool_ip->ip));
-					$child = $pool_ip->child_user()->AllChildUser()->toArray();
-					$data['max_child_account'] = ($max_child - count($child));
-					$data['child'] = $child;
-					$data['root_account'] = array_only($pool_ip->attributes, ['id', 'username', 'password', 'status', 'created_at']);
+					return $this->getChildUserTunnel($pool_ip);
 				}
 			}
 
@@ -209,18 +198,33 @@ class IPHelper{
 			throw new ApplicationException('Select 1 item for delete.');
 		}
 
-		$check = ChildUser::find($data['id']);
+		if($data['type'] == 'root'){
+			$check = PoolIp::find($data['id']);
+		}else{
+			$check = ChildUser::find($data['id']);
+		}
 		
-		if($check && in_array($action, ['delete', 'enabled', 'disabled'])){
+		if($check && in_array($action, ['delete', 'enabled', 'disabled', 'change_password'])){
+			$server_id = $data['type']=='root'?$check->server_id:$check->pool_ip->server_id;
+
+			$defaultParam = [
+				'server_id'		=> $server_id,
+				'name'  		=> $check->username,
+			];
+			if($action == 'change_password'){
+				$defaultParam['password'] = $data['password'];
+			}
+
 			// action server
 			MikrotikProcess::withChain([
-				MikrotikProcess::actionSecret($action, [
-					'server_id'		=> $check->pool_ip->server_id,
-					'name'  		=> $check->user,
-				]),
+				MikrotikProcess::actionSecret($action, $defaultParam),
 			])->dispatch();
 
 			switch ($action) {
+				case 'change_password':
+					$check->password = $data['password'];
+					$check->save();
+					break;
 				case 'delete':
 					$check->delete();
 					break;
@@ -262,6 +266,20 @@ class IPHelper{
         }
 
         return false;
+	}
+
+	private function getChildUserTunnel($pool_ip){
+		$data = [];
+		$max_child = (ip2long($pool_ip->usable_last_ip)-ip2long($pool_ip->ip));
+		$child = $pool_ip->child_user()->AllChildUser()->toArray();
+		$data['max_child_account'] = ($max_child - count($child));
+		$data['child'] = $child;
+		$root_account = array_only($pool_ip->attributes, ['id', 'username', 'password', 'status', 'created_at']);
+		$root_account['host_ip'] = $pool_ip->server->host;
+		// $root_account['host_port'] = $pool_ip->server->port;
+		$data['root_account'] = $root_account;
+
+		return $data;
 	}
 
 	private function userPermissions(){

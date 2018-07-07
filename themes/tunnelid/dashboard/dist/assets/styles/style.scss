@@ -33,3 +33,7 @@ File: scss
 button:focus{
 	outline: none !important;
 }
+
+.text-inherit, .text-inherit:hover, .text-inherit:focus{
+	color: inherit;
+}

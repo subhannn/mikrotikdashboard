@@ -20,16 +20,12 @@
                         <h5 class="col-md-4">{{ tunnel.root_account.host_ip }}</h5>
                     </div>
                     <div class="row">
-                        <h5 class="col-md-2 text-right text-muted">Port</h5>
-                        <h5 class="col-md-4">{{ tunnel.root_account.host_port }}</h5>
-                    </div>
-                    <div class="row">
                         <h5 class="col-md-2 text-right text-muted">Tunnel Username</h5>
-                        <h5 class="col-md-4">{{ tunnel.root_account.username }}</h5>
+                        <h5 class="col-md-4"><a class="text-inherit" href="javascript:;" matTooltip="Click to Copy" [matTooltipPosition]="'above'" ngxClipboard [cbContent]="tunnel.root_account.username">{{ tunnel.root_account.username }}</a></h5>
                     </div>
                     <div class="row">
                         <h5 class="col-md-2 text-right text-muted">Tunnel Password</h5>
-                        <h5 class="col-md-4">{{ tunnel.root_account.password }}</h5>
+                        <h5 class="col-md-4"><app-inline-edit [min]="6" [max]="12" [charLimit]="'luds'" [(text)]="tunnel.root_account.password" [confirmMessage]="'Are you sure want to edit password?'" (onEdit)="onChangeRootPassword($event)"></app-inline-edit></h5>
                     </div>
                 </div>
             </div>
@@ -67,8 +63,8 @@
 
                             <tr *ngFor="let item of tunnel.child; let i = index">
                                 <td>{{ i+1 }}</td>
-                            	<td ><span>{{ item.user }}</span></td>
-                                <td ><span>{{ item.pass }}</span></td>
+                            	<td ><a href="javascript:;" class="text-inherit" matTooltip="Click to Copy" [matTooltipPosition]="'above'" ngxClipboard [cbContent]="item.username">{{ item.username }}</a></td>
+                                <td ><span><app-inline-edit [(text)]="item.password" [min]="6" [max]="12" [charLimit]="'luds'" [confirmMessage]="'Are you sure want to edit password?'" (onEdit)="onChangeChildPassword($event, i)"></app-inline-edit></span></td>
                                 <td ><mat-slide-toggle [color]="'primary'" [checked]="!!+item.status" (change)="onChangeStatus(i, $event)"></mat-slide-toggle></td>
                                 <td >{{ item.created_at|date:'d MMM yyyy h:mm a' }}</td>
                                 <td ><button data-toggle="tooltip" title="Delete" (click)="onDelete(i)" class="btn-xs waves-effect waves-light btn-danger"><i class="mdi mdi-window-close"></i></button></td>
