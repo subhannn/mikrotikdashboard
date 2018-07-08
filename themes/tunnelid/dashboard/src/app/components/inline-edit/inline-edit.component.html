@@ -9,7 +9,7 @@
     <span [hidden]="isDisplay" class="form-material">
         <input #editText required type="text"
         	(keyup.enter)="editDone()" 
-        	(keyup.esc)="cancelEdit()" (blur)="editDone()"
+        	(keyup.esc)="reset()" (blur)="editDone()"
         	(keypress)="limitChar($event)"
         	[(ngModel)]="text" (ngModelChange)="onChange()"
         	class="editing form-control" [ngClass]="{'error': isError}" spellcheck="false">

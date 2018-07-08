@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { NgModule, APP_INITIALIZER } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 
@@ -7,6 +7,7 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {MatProgressBarModule, MatProgressSpinnerModule, MatDialogModule,MatSlideToggleModule, MatMenuModule,
   MatIconModule,MatButtonModule, MatTooltipModule} from '@angular/material';
 import { ClipboardModule } from 'ngx-clipboard';
+import { NgxPermissionsModule, NgxPermissionsService } from 'ngx-permissions';
 
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
@@ -15,9 +16,8 @@ import { SideBarComponent } from './side-bar/side-bar.component';
 import { HomeComponent } from './home/home.component';
 import { TunnelComponent } from './tunnel/tunnel.component';
 
-import { UserService } from './services/user.service';
-import { IpService } from './services/ip.service';
-import { ModalService, ConfirmationModalComponent } from './services/modal.service';
+import { UserService, User } from './services/user.service';
+import { ModalModule, ModalService } from './services/modal.service';
 import { InlineEditComponent } from './components/inline-edit/inline-edit.component';
 
 @NgModule({
@@ -27,11 +27,11 @@ import { InlineEditComponent } from './components/inline-edit/inline-edit.compon
     SideBarComponent,
     HomeComponent,
     TunnelComponent,
-    ConfirmationModalComponent,
     InlineEditComponent
   ],
   imports: [
-    FormsModule, ClipboardModule,
+    FormsModule, ClipboardModule, NgxPermissionsModule.forRoot(),
+    ModalModule,
     BrowserAnimationsModule,
     MatProgressBarModule,MatProgressSpinnerModule,MatDialogModule,MatSlideToggleModule,MatMenuModule,MatIconModule,MatButtonModule,
     MatTooltipModule,
@@ -42,10 +42,17 @@ import { InlineEditComponent } from './components/inline-edit/inline-edit.compon
   ],
   providers: [
     UserService,
-    IpService,
-    ModalService
+    ModalService,
+    {
+      provide: APP_INITIALIZER,
+      useFactory: (us: UserService, ps: NgxPermissionsService) => function() {
+        us.populate((user) => {})
+        return ps.loadPermissions(window['PERMISSIONS']);
+      },
+      deps: [UserService, NgxPermissionsService],
+      multi: true
+    }
   ],
   bootstrap: [AppComponent],
-  entryComponents: [ConfirmationModalComponent]
 })
 export class AppModule { }

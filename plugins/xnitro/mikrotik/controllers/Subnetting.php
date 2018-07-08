@@ -10,6 +10,7 @@ use Xnitro\Mikrotik\Models\Settings as SettingsModel;
 use Auth;
 use Crypt;
 use PEAR2\Net\RouterOS;
+use Flash;
 
 /**
  * Subnetting Back-end Controller
@@ -93,11 +94,12 @@ class Subnetting extends Controller
     }
 
     public function onSubmitRequestPoolIp(){
-        $network_size = post('network_size', null);
-        $user = post('user', null);
-        $server = post('server');
+        // $network_size = post('network_size', null);
+        // $user = post('user', null);
+        // $server = post('server', null);
+        // $date = post('expired_date', null);
 
-        IpHelper::requestNewPoolIp($network_size, $user, $server);
+        IpHelper::requestNewPoolIp(post());
 
         return Redirect::back()->with('message','Operation Successful !');
     }
@@ -121,6 +123,44 @@ class Subnetting extends Controller
         if($this->vars['activeServer']){
             $query->where('server_id', $this->vars['activeServer']);
         }
+    }
+
+    public function onDeleteTunnel(){
+        $checked = post('checked');
+
+        IpHelper::removePoolIp($checked);
+
+        Flash::success('Deleted selected records.');
+        return $this->listRefresh();
+    }
+
+    public function onActionTunnelIp(){
+        $messageFlash = '';
+        if (($bulkAction = post('action')) &&
+            ($checkedIds = post('checked')) &&
+            is_array($checkedIds) &&
+            count($checkedIds)
+        ) {
+            foreach ($checkedIds as $id) {
+                switch ($bulkAction) {
+                    case 'enabled':
+                    case 'disabled':
+                        $data = [
+                            'id'    => $id,
+                            'type'  => 'root'
+                        ];
+                        IpHelper::actionUserTunnelChild($bulkAction, $data, true, true);
+                        $messageFlash = ucfirst($bulkAction).' Action Successful.';
+                        break;
+                    default:
+                        continue;
+                        break;
+                }
+            }
+        }
+
+        Flash::success($messageFlash);
+        return $this->listRefresh();
     }
 
     public function onSearchUser(){

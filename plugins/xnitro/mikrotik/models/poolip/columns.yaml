@@ -9,6 +9,11 @@ columns:
         clickable: false
         relation: user
         select: concat(name, " (", username, ")")
+    paid:
+        label: 'Status Paid?'
+        type: partial
+        path: 'partial/status_paid'
+        clickable: false
     server_name:
         label: Server
         searchable: true
@@ -28,8 +33,16 @@ columns:
         select: concat(usable_first_ip, " - ", usable_last_ip)
         clickable: false
         searchable: false
+    expired_date:
+        label: 'Expired At'
+        type: date
+        clickable: false
     created_at:
         label: 'Created'
         type: timetense
         clickable: false
-
+    active:
+        label: 'Active?'
+        type: partial
+        path: 'partial/enable_disable'
+        clickable: false

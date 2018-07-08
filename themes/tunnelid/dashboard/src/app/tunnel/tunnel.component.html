@@ -27,13 +27,21 @@
                         <h5 class="col-md-2 text-right text-muted">Tunnel Password</h5>
                         <h5 class="col-md-4"><app-inline-edit [min]="6" [max]="12" [charLimit]="'luds'" [(text)]="tunnel.root_account.password" [confirmMessage]="'Are you sure want to edit password?'" (onEdit)="onChangeRootPassword($event)"></app-inline-edit></h5>
                     </div>
+                    <div class="row">
+                        <h5 class="col-md-2 text-right text-muted">Expired Date</h5>
+                        <h5 class="col-md-4">{{ tunnel.root_account.expired_date|date:'d MMMM yyyy' }}</h5>
+                    </div>
+                    <div class="row">
+                        <h5 class="col-md-2 text-right text-muted">Status</h5>
+                        <h5 class="col-md-4 {{ !!tunnel.root_account.status ? 'st-active':'st-disabled' }}">{{ !!tunnel.root_account.status ? 'Active':'Disabled' }}</h5>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row" *ngIf="userService.checkPermissions('child_user_manage')">
+<div class="row" *ngxPermissionsOnly="['child_user_manage']">
     <div class="col-lg-12">
         <div class="card">
             <div class="card-block">
@@ -46,7 +54,6 @@
                 	</div>
                 </div>
                 <h6 *ngIf="tunnel" class="card-subtitle">Maximum you can create Child user is : <code>{{ tunnel.max_child_account }}</code></h6>
-                <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
                 <div class="table-responsive" *ngIf="tunnel">
                     <table class="table">
                         <thead>

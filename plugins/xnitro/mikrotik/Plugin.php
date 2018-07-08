@@ -129,7 +129,10 @@ class Plugin extends PluginBase
     {
         return [
             'filters' => [
-                'themes_path'   => 'themes_path'
+                'themes_path'   => 'themes_path',
+                'user_permissions'=> function($str=''){
+                    return json_encode(\Xnitro\Mikrotik\Classes\IPHelper::instance()->userPermissions());
+                }
             ]
         ];
     }

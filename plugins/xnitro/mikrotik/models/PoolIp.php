@@ -7,6 +7,8 @@ use Model;
  */
 class PoolIp extends Model
 {
+    use \October\Rain\Database\Traits\SoftDelete;
+
     /**
      * @var string The database table used by the model.
      */
@@ -20,7 +22,9 @@ class PoolIp extends Model
     /**
      * @var array Fillable fields
      */
-    protected $fillable = ['ip', 'usable_first_ip', 'usable_last_ip', 'size', 'user_id', 'status', 'server_id', 'username', 'password'];
+    protected $fillable = ['ip', 'usable_first_ip', 'usable_last_ip', 'size', 'user_id', 'status', 'server_id', 'username', 'password', 'deleted_at', 'active', 'paid', 'last_logout', 'expired_date'];
+
+    protected $dates = ['deleted_at'];
 
     /**
      * @var array Relations
@@ -66,10 +70,19 @@ class PoolIp extends Model
             ->orderBy('id', 'desc');
     }
 
-    public function getReleaseIp($query, $server_id, $size){
-        return $query->where('server_id', $server_id)
+    public function scopeGetReleaseIp($query, $server_id, $size){
+        return $query->onlyTrashed()
+            ->where('server_id', $server_id)
             ->where('size', $size)
             ->where('status', '2')
             ->orderBy('id', 'desc');
+    }
+
+    public function beforeSave(){
+        if($this->isDirty('active')){
+            $this->child_user()->update([
+                'active'    => $this->active
+            ]);
+        }
     }
 }

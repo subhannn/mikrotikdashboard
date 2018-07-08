@@ -1,18 +1,20 @@
-import { Injectable } from '@angular/core';
+import { Injectable, EventEmitter } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
  
-import { Observable, of } from 'rxjs';
+import { Observable, of, Subscription } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import * as $ from 'jquery';
+import { ModalService } from './modal.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
-
   constructor(
-  	private http: HttpClient
+  	private http: HttpClient,
+    private modalService: ModalService
   ) { }
+  public isLoading = false
 
   private setHeaders(handler: string, octoberComponent: string = 'mikrotikDashboard'): HttpHeaders {
   	const headersConfig = {
@@ -24,24 +26,47 @@ export class ApiService {
   	return new HttpHeaders(headersConfig)
   }
 
-  request(handler: string, body: Object = {}, octoberComponent: string = 'mikrotikDashboard'): Observable<any>{
-  	return this.http.post(window.location.origin+window.location.pathname, 
-  		$.param(body), 
+  request(handler: string, options: Config){
+    $('#pageLoader').show()
+  	this.http.post(window.location.origin+window.location.pathname, 
+  		options.data?$.param(options.data):{}, 
   		{ 
-  			headers: this.setHeaders(handler, octoberComponent)
+  			headers: this.setHeaders(handler, options.octoberComponent?options.octoberComponent:'mikrotikDashboard')
   		})
-  		.pipe(catchError(this.handleError(handler)))
+  		.pipe(catchError(this.handleError(handler, options.error)))
+      .subscribe(
+        response => this.success(options.success, response)
+      )
   }
 
-  private handleError<T> (operation = 'operation', result?: T) {
-    return (error: any): Observable<T> => {
+  private success(onSuccess: any, response: any){
+    $('#pageLoader').hide()
+    if(typeof onSuccess == 'function' && onSuccess && response){
+      onSuccess(response)
+    }
+  }
 
-      // TODO: send the error to remote logging infrastructure
-      // console.error(error); // log to console instead
-      console.log(operation+' = '+error.message)
+  private error(onError: any, err: any){
+    $('#pageLoader').hide()
+    if(typeof onError == 'function' && onError && err){
+      onError(err)
+    }
+  }
+
+  private handleError<T> (operation = 'operation', onError: any, result?: T) {
+    return (error: any): Observable<T> => {
+      this.error(onError, error)
+      this.modalService.alert(error.error, error.name)
 
       // Let the app keep running by returning an empty result.
       return of(result as T);
     };
   }
+}
+
+export class Config{
+  data: any;
+  octoberComponent: string;
+  success: (response)=> void;
+  error: (error)=> void;
 }

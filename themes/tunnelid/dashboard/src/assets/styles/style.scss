@@ -37,3 +37,9 @@ button:focus{
 .text-inherit, .text-inherit:hover, .text-inherit:focus{
 	color: inherit;
 }
+
+.page-loader{
+	z-index: 99;
+    position: fixed !important;
+    display: none;
+}

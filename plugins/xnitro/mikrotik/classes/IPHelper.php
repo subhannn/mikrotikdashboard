@@ -41,13 +41,25 @@ class IPHelper{
 		}
 	}
 
-	public function requestNewPoolIp($network_size, $user, $server_id){
+	public function requestNewPoolIp($data = []){
+		extract(array_merge([
+            'network_size'	=> null,
+            'server_id' 	=> null,
+            'user_id'		=> null,
+            'expired_date'	=> null,
+                        ], $data));
+
 		if(!isset(self::NETWORK_IP[$network_size])){
 			throw new ApplicationException('Network Size out of Size');
 			return false;
 		}
 
-		$user = Auth::findUserById($user);
+		if($expired_date == null){
+			throw new ApplicationException('Set Expired Date First');
+			return false;
+		}
+
+		$user = Auth::findUserById($user_id);
 		if(!$user){
 			throw new ApplicationException('User not found or user is suspended.');
 			return false;
@@ -64,16 +76,20 @@ class IPHelper{
 		$rootCal = new SubnetCalculator($rootIp, '16');
 		$firstRootIp = $this->nextIp($rootCal->getAddressableHostRange()[0]);
 		$lastRootIp = $rootCal->getAddressableHostRange()[1];
-		// $release = PoolIp::getReleaseIp($server, $network_size);
-		// if($release->count() > 0){
-
-		// }
-
-		$last_pool_ip = PoolIp::GetLastIp($server_id, $network_size)->first();
-		if($last_pool_ip){
-			$rootUserIp = $this->nextIp($last_pool_ip->usable_last_ip, 2);
+		
+		// check release IP first
+		$release = PoolIp::GetReleaseIp($server_id, $network_size)->first();
+		$releaseIp = false;
+		if($release){
+			$releaseIp = true;
+			$rootUserIp = $release->ip;
 		}else{
-			$rootUserIp = $firstRootIp;
+			$last_pool_ip = PoolIp::GetLastIp($server_id, $network_size)->first();
+			if($last_pool_ip){
+				$rootUserIp = $this->nextIp($last_pool_ip->usable_last_ip, 2);
+			}else{
+				$rootUserIp = $firstRootIp;
+			}
 		}
 
 		$userCal = new SubnetCalculator($rootUserIp, $network_size);
@@ -95,20 +111,25 @@ class IPHelper{
 			'username'			=> $userUsername,
 			'password'			=> $userPassword,
 			'server_id'			=> $server_id,
-			'status'			=> 1
+			'status'			=> 1,
+			'active'			=> 1,
+			'paid'				=> 1,
+			'expired_date'		=> date("Y-m-d", strtotime($expired_date)),
 		];
 		
 		$flash_message = 'Create Pool IP Success';
-		$newPoolIp = PoolIp::create($data);
+		if($releaseIp){
+			$data['deleted_at'] = null;
+			$release->update($data);
+		}else{
+			$newPoolIp = PoolIp::create($data);
+		}
 
 		// SERVER PROCESS
 		// #Create POOL IP
 		$t = $this->generateStrongPassword(3, false, 'lud');
 		$range = $usableIpSize==1?$userIp:($userIp.'-'.$lastUserIp);
 		$name = $user->username;
-
-		// $server = Server::instance()->makeServer($server_id);
-		// $server->createPoolIp($name, $range);
 
 		MikrotikProcess::withChain([
 			MikrotikProcess::createPoolIp([
@@ -159,7 +180,11 @@ class IPHelper{
 				'max_child_account'	=> 0,
 				'child'				=> []
 			];
+
 			if($pool_ip){
+				if($pool_ip->active == '0')
+					throw new ApplicationException('Your root account has been disabled, you cant run this operation.');
+
 				// create new user
 				$t = $this->generateStrongPassword(3, false, 'lud');
 				$username = $pool_ip->user->username.'_'.$t;
@@ -193,23 +218,27 @@ class IPHelper{
 		throw new ApplicationException('No User Login.');
 	}
 
-	public function actionUserTunnelChild($action='', $data=[]){
-		if(!isset($data['id'])){
+	public function actionUserTunnelChild($action='', $data=[], $actionToAll=false, $isAdmin=false){
+		if(!isset($data['id']))
 			throw new ApplicationException('Select 1 item for delete.');
-		}
 
-		if($data['type'] == 'root'){
+		if(isset($data['type']) && $data['type'] == 'root'){
 			$check = PoolIp::find($data['id']);
+			if(!$isAdmin && $check->active == '0')
+				throw new ApplicationException('Your root account has been disabled, you cant run this operation.');
 		}else{
 			$check = ChildUser::find($data['id']);
+			if(!$isAdmin && $check->pool_ip->active == '0')
+				throw new ApplicationException('Your root account has been disabled, you cant run this operation.');
 		}
 		
 		if($check && in_array($action, ['delete', 'enabled', 'disabled', 'change_password'])){
-			$server_id = $data['type']=='root'?$check->server_id:$check->pool_ip->server_id;
+			$server_id = (isset($data['type']) && $data['type']=='root')?$check->server_id:$check->pool_ip->server_id;
+			$username = $actionToAll?$check->username.'.*':$check->username;
 
 			$defaultParam = [
 				'server_id'		=> $server_id,
-				'name'  		=> $check->username,
+				'name'  		=> $username,
 			];
 			if($action == 'change_password'){
 				$defaultParam['password'] = $data['password'];
@@ -229,11 +258,11 @@ class IPHelper{
 					$check->delete();
 					break;
 				case 'enabled':
-					$check->status = 1;
+					$check->active = 1;
 					$check->save();
 					break;
 				case 'disabled':
-					$check->status = 0;
+					$check->active = 0;
 					$check->save();
 					break;
 				default:
@@ -268,13 +297,48 @@ class IPHelper{
         return false;
 	}
 
+	public function removePoolIp($data=[]){
+		if(!$data)
+			throw new ApplicationException('Select at leat 1 item for delete.');
+
+		$pools = PoolIp::whereIn('id', $data)->get();
+		if($pools){
+			$trashed = [];
+			foreach ($pools as $row) {
+				// action server
+				MikrotikProcess::withChain([
+					MikrotikProcess::actionSecret('delete', [
+						'server_id'		=> $row->server_id,
+						'name'  		=> $row->user->username.'.*',
+					]),
+					MikrotikProcess::actionProfile('delete', [
+						'server_id'		=> $row->server_id,
+						'name'  		=> $row->user->username.'_profile',
+					]),
+					MikrotikProcess::actionPoolIp('delete', [
+						'server_id'		=> $row->server_id,
+						'name'  		=> $row->user->username.'_pool',
+					]),
+				])->dispatch();
+
+				$row->child_user()->delete();
+				$row->delete();
+			}
+
+			PoolIp::onlyTrashed()->whereIn('id', $data)->update([
+				'status'	=> 2
+			]);
+		}
+	}
+
 	private function getChildUserTunnel($pool_ip){
 		$data = [];
 		$max_child = (ip2long($pool_ip->usable_last_ip)-ip2long($pool_ip->ip));
 		$child = $pool_ip->child_user()->AllChildUser()->toArray();
 		$data['max_child_account'] = ($max_child - count($child));
 		$data['child'] = $child;
-		$root_account = array_only($pool_ip->attributes, ['id', 'username', 'password', 'status', 'created_at']);
+		$root_account = array_only($pool_ip->attributes, ['id', 'username', 'password', 'created_at', 'last_logout', 'expired_date']);
+		$root_account['status'] = $pool_ip->active;
 		$root_account['host_ip'] = $pool_ip->server->host;
 		// $root_account['host_port'] = $pool_ip->server->port;
 		$data['root_account'] = $root_account;
@@ -282,15 +346,27 @@ class IPHelper{
 		return $data;
 	}
 
-	private function userPermissions(){
+	public function userPermissions(){
 		$data = [];
-		// Check User Child Tunnel
-		$user_child = PoolIp::where('user_id', $this->user->id)->first();
-		if($user_child && $user_child->size != '30'){
-			$data[] = 'child_user_manage';
+
+		if($this->user){
+			// Check User Child Tunnel
+			$user_child = PoolIp::where('user_id', $this->user->id)->first();
+			if($user_child)
+				$data[] = 'susbcribe_tunnel';
+
+			if($user_child && $user_child->size != '30'){
+				$data[] = 'child_user_manage';
+			}
 		}
 
 		return $data;
+	}
+
+	private function checkLastLogout(){
+		if($this->user){
+			// $result = 
+		}
 	}
 
 	private function nextIp($ip, $next=1){
@@ -331,142 +407,4 @@ class IPHelper{
 		$dash_str .= $password;
 		return $dash_str;
 	}
-
-	// public function requestNewGroupIp($parent_id=null, $size=self::GROUP_SIZE){
-	// 	$group_name = null;
-	// 	if($parent_id != null){
-	// 		$parent = GroupIp::find($parent_id);
-	// 		if(!isset($parent->id)){
-	// 			throw new ApplicationException('Parent ID Not Found');
-	// 			return false;
-	// 		}
-
-	// 		$group = GroupIp::getLastGroup($parent->id)->first();
-	// 		if(!$group){ // create pool group
-	// 			$group_ip = $parent->ip;
-	// 		}else{
-	// 			$curLastIp = $group->last_ip;
-	// 			$group_ip = long2ip(ip2long($curLastIp)+1);
-	// 		}
-	// 		if(ip2long($group_ip) > ip2long($parent->meta['broadcast_address'])){
-	// 			throw new ApplicationException('All Pool IP is Sold, Please request new Group IP');
-	// 			return false;
-	// 		}
-	// 		$group_name = BackendAuth::getUser()->login.'_pool_'.uniqid();
-	// 		$flash_message = 'Create Pool IP Success';
-	// 	}else{
-	// 		$group = GroupIp::getLastGroup()->first();
-	// 		if(!$group){ // create group
-	// 			$group_ip = self::FIRST_GROUP_IP;
-	// 		}else{
-	// 			$curLastIp = $group->last_ip;
-	// 			$group_ip = long2ip(ip2long($curLastIp)+1);
-	// 		}
-	// 		$subCul = new SubnetCalculator($group_ip, $size);
-	// 		$flash_message = 'Create Group IP Success';
-	// 		$parent_id = 0;
-	// 	}
-
-	// 	$subCul = new SubnetCalculator($group_ip, $size);
-	// 	$first_usable_ip = $subCul->getAddressableHostRange()[0];
-	// 	$first_usable_ip = long2ip(ip2long($first_usable_ip)+1);
-	// 	$data = [
-	// 		'ip'		=> (string) $group_ip,
-	// 		'size'		=> $size,
-	// 		'user_id'	=> BackendAuth::getUser()->id,
-	// 		'last_ip'	=> $subCul->getBroadcastAddress(),
-	// 		'parent_id'	=> $parent_id,
-	// 		'meta'		=> [
-	// 			'netmask'			=> $subCul->getSubnetMask(),
-	// 			'network_address'	=> $subCul->getNetworkPortion(),
-	// 			'broadcast_address'	=> $subCul->getBroadcastAddress(),
-	// 			'usable_ip'			=> ($subCul->getNumberAddressableHosts()-1),
-	// 			'first_usable_ip'	=> $first_usable_ip,
-	// 			'last_usable_ip'	=> $subCul->getAddressableHostRange()[1]
-	// 		]
-	// 	];
-	// 	// print_r($data);
-	// 	// exit();
-		
-	// 	if($group_name != null)
-	// 		$data['group_name'] = $group_name;
-
-	// 	$newGroup = GroupIp::create($data);
-		
-	// 	Flash::success($flash_message);
-
-	// 	return true;
-	// }
-
-	// public function assignIpForm($pool_id=null, $return_number=false){
-	// 	if(!$pool_id){
-	// 		throw new ApplicationException('Pool ID Not Found');
-	// 		return false;
-	// 	}
-	// 	$pool = GroupIp::find($pool_id);
-	// 	if(!isset($pool->id)){
-	// 		throw new ApplicationException('Pool ID Not Found');
-	// 		return false;
-	// 	}
-
-	// 	$available_ip = $pool->meta['usable_ip'] - count($pool->pool_ip);
-	// 	if($available_ip <= 0 && !$return_number){
-	// 		throw new ApplicationException('Current Pool IP not Available');
-	// 		return false;
-	// 	}elseif($return_number){
-	// 		return $available_ip;
-	// 	}
-
-	// 	$data = [];
-		
-	// 	$data['ips'] = range(1, $available_ip);
-		
-	// 	return $data;
-	// }
-
-	// public function assignIp($pool_id, $number_ip, $user_id){
-	// 	if(!$pool_id){
-	// 		throw new ApplicationException('Pool ID Not Found');
-	// 		return false;
-	// 	}
-	// 	$pool = GroupIp::find($pool_id);
-	// 	if(!isset($pool->id)){
-	// 		throw new ApplicationException('Pool ID Not Found');
-	// 		return false;
-	// 	}
-
-	// 	$available_ip = $pool->meta['usable_ip'] - count($pool->pool_ip);
-	// 	if($available_ip <= 0){
-	// 		throw new ApplicationException('Current Pool IP not Available');
-	// 		return false;
-	// 	}
-	// 	if($number_ip > $available_ip){
-	// 		throw new ApplicationException('Only Available '.$available_ip.' IP on this Pool, please create manual new Pool.');
-	// 		return false;
-	// 	}
-	// 	$last_ip = $pool->pool_ip()->getLastIp()->first();
-	// 	if(!$last_ip){
-	// 		$last_ip = $pool->meta['first_usable_ip'];
-	// 	}else{
-	// 		$last_ip = long2ip(ip2long($last_ip->ip)+1);
-	// 	}
-	// 	// echo $last_ip;
-	// 	// exit();
-	// 	$createPool = [];
-	// 	foreach (range(1, $number_ip) as $num) {
-	// 		$last_ip = long2ip(ip2long($last_ip));
-	// 		$createPool = new PoolIp([
-	// 			'group_id'	=> $pool_id,
-	// 			'ip'		=> $last_ip
-	// 		]);
-	// 		$createPool->assign = [$user_id];
-	// 		$createPool->save();
-
-	// 		$last_ip = long2ip(ip2long($last_ip)+1);
-	// 	}
-
-	// 	Flash::success('Assign IP Success');
-
-	// 	return true;
-	// }
 }

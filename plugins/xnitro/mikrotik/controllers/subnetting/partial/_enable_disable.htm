@@ -1,0 +1,17 @@
+<?php $action = $record->active=='0' ? 'enabled' : 'disabled'; ?>
+<label class="custom-switch" data-check="oc-disable-<?= $record->id ?>" style="margin-bottom:0">
+    <input data-request="onActionTunnelIp"
+        data-request-data="action: '<?= $action ?>', checked: [<?= $record->id ?>]"
+        type="checkbox"
+        name="live_<?= $record->id ?>"
+        value="<?= !$record->active ?>"
+        <?php if ($record->active=='1') : ?>checked=checked<?php endif; ?>
+        data-stripe-load-indicator
+    >
+
+    <span>
+        <span><?= e(trans('system::lang.plugins.check_yes')) ?></span>
+        <span><?= e(trans('system::lang.plugins.check_no')) ?></span>
+    </span>
+    <a class="slide-button"></a>
+</label>

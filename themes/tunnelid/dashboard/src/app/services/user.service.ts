@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
-import { ApiService } from './api.service';
+import { ApiService, Config } from './api.service';
 
 import * as $ from 'jquery';
 
@@ -11,18 +11,22 @@ export class UserService {
   private currentUserSubject = new BehaviorSubject<any>(new User);
   public currentUser = this.currentUserSubject.asObservable()
 
+  public isLoggedIn = false;
+
   constructor(
-  	private apiService: ApiService,
+  	private apiService: ApiService
   ) { }
 
   userObj: User;
 
-  populate(){
-  	this.apiService.request('onCheckUser')
-  		.subscribe(
-  			response => this.setAuth(response),
-  			err => this.purgeAuth()
-  		)
+  populate(onSuccess: (user) => any){
+    var $this = this
+  	this.apiService.request('onCheckUser', <Config>{
+      success: (response) => {
+        this.setAuth(response)
+        onSuccess(response)
+      }
+    })
   }
 
   setAuth(user: User){
@@ -32,24 +36,19 @@ export class UserService {
   	// save active user
   	this.currentUserSubject.next(user)
     this.userObj = user
-  }
-
-  checkPermissions(index){
-    if(typeof this.userObj != 'undefined' && this.userObj.permissions.indexOf(index) >= 0){
-      return true;
-    }
-
-    return false;
+    this.isLoggedIn = true
   }
 
   signout(){
-    this.apiService.request('onLogout', {
-      redirect: '/'
-    }, 'session')
-      .subscribe(
-        response => window.location.href = response.X_OCTOBER_REDIRECT,
-        err => this.purgeAuth()
-      )
+    this.apiService.request('onLogout', <Config>{
+      data: {
+        redirect: '/'
+      },
+      octoberComponent: 'session',
+      success: (response) => {
+        window.location.href = response.X_OCTOBER_REDIRECT
+      }
+    })
   }
 
   purgeAuth(){

@@ -12,4 +12,20 @@
         <option <?= $activeServer==$server['id']?'selected="selected"':'' ?> value="<?= $server['id'] ?>"><?= $server['name'] ?> (<?= $server['host'] ?>)</option>
         <?php endforeach; ?>
     </select>
+
+    <button
+        class="btn btn-default oc-icon-trash-o"
+        disabled="disabled"
+        onclick="$(this).data('request-data', {
+            checked: $('.control-list').listWidget('getChecked')
+        })"
+        data-request="onDeleteTunnel"
+        data-request-confirm="<?= e(trans('backend::lang.list.delete_selected_confirm')) ?>"
+        data-trigger-action="enable"
+        data-trigger=".control-list input[type=checkbox]"
+        data-trigger-condition="checked"
+        data-request-success="$(this).prop('disabled', true)"
+        data-stripe-load-indicator>
+        <?= e(trans('backend::lang.list.delete_selected')) ?>
+    </button>
 </div>

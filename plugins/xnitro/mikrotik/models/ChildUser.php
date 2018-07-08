@@ -16,7 +16,7 @@ class ChildUser extends Model
     public $rules = [
     ];
 
-    protected $fillable = ['pool_ip_id', 'username', 'password', 'last_login', 'status'];
+    protected $fillable = ['pool_ip_id', 'username', 'password', 'last_logout', 'active'];
 
     /**
      * @var string The database table used by the model.
@@ -30,6 +30,6 @@ class ChildUser extends Model
     ];
 
     public function scopeAllChildUser($query){
-        return $query->select(['id', 'username', 'password', 'last_login', 'status', 'created_at'])->get();
+        return $query->select(['id', 'username', 'password', 'last_logout', 'active as status', 'created_at'])->get();
     }
 }

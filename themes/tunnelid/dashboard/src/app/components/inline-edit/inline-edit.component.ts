@@ -24,7 +24,7 @@ export class InlineEditComponent implements OnInit, OnChanges{
     @Input() max: number;
     @Input() charLimit: string;
 
-    @Output() onEdit = new EventEmitter<string>();
+    @Output() onEdit = new EventEmitter<InlineEvent>();
 
     private _firstText: string;
     ngOnInit(){
@@ -93,21 +93,32 @@ export class InlineEditComponent implements OnInit, OnChanges{
 			    this.modal.confirmation(this.confirmMessage)
 			      .subscribe(result => {
 			        if(result == true){
-			         	this.onEdit.emit(this.text)
+			         	this.onEdit.emit(<InlineEvent>{
+                             text: this.text,
+                             source: this
+                         })
 			        }else{
 			        	this.text = this._firstText
 			        }
 			      })
     		}else{
-    			this.onEdit.emit(this.text)
+    			this.onEdit.emit(<InlineEvent>{
+                     text: this.text,
+                     source: this
+                 })
     		}
     	}
     	this.isDisplay = true
     }
-
-    cancelEdit(){
+    
+    reset(){
     	this.isDisplay = true
     	this.isError = false
     	this.text = this._firstText
     }
+}
+
+export class InlineEvent{
+    text: string;
+    source: InlineEditComponent;
 }

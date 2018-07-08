@@ -1,8 +1,11 @@
 import { Component, OnInit } from '@angular/core';
+import { NgxPermissionsService } from 'ngx-permissions';
 
-import { IpService } from '../services/ip.service';
+import { ApiService, Config } from '../services/api.service';
 import { ModalService } from '../services/modal.service';
 import { UserService } from '../services/user.service';
+import { MatSlideToggleChange } from '@angular/material'
+import { InlineEvent } from '../components/inline-edit/inline-edit.component';
 
 @Component({
   selector: 'app-tunnel',
@@ -12,34 +15,35 @@ import { UserService } from '../services/user.service';
 export class TunnelComponent implements OnInit {
 
   constructor(
-  	private ipService: IpService,
+    private apiService: ApiService,
+    private permissionsService: NgxPermissionsService,
   	private modal: ModalService,
     public userService: UserService
   ) { }
 
   tunnel: Tunnel;
 
-  loading: Boolean = false;
-
   ngOnInit() {
-    this.loading = true
-  	this.ipService.apiService.request('onGetData', {
-  		type: 'tunnel_ip'
+  	this.apiService.request('onGetData', <Config>{
+      data: {
+        type: 'tunnel_ip'
+      },
+      success: (response) => {
+        this.setListTunnelIp(response)
+      }
   	})
-  		.subscribe(
-  			response => (this.setListTunnelIp(response), this.loading = false)
-  		)
   }
 
   onClick(){
-  	this.loading = true
   	if(this.tunnel.max_child_account > 0){
-  		this.ipService.apiService.request('onPostData', {
-	  		type: 'new_tunnel_user'
+  		this.apiService.request('onPostData', <Config>{
+        data: {
+          type: 'new_tunnel_user'
+        },
+        success: (response) => {
+          this.setListTunnelIp(response)
+        }
 	  	})
-	  		.subscribe(
-	  			response => (this.setListTunnelIp(response), this.loading = false)
-	  		)
   	}
   }
 
@@ -52,60 +56,88 @@ export class TunnelComponent implements OnInit {
   		})
   }
 
-  onChangeRootPassword(newPass){
-    this.tunnel.root_account['password'] = newPass
-  }
-
-  onChangeChildPassword(newPass, index){
-    if(typeof this.tunnel.child[index] != 'undefined'){
-      this.ipService.apiService.request('onPostData', {
+  onChangeRootPassword(event: InlineEvent){
+    this.apiService.request('onPostData', <Config>{
+      data: {
         type: 'change_tunnel_password',
         data: {
-          type: 'child',
-          id: this.tunnel.child[index]['id'],
-          password: newPass
+          type: 'root',
+          id: this.tunnel.root_account['id'],
+          password: event.text
+        }
+      },
+      success: (response) => {
+        this.tunnel.root_account['password'] = event.text
+      },
+      error: (error) => {
+          event.source.reset()
+        }
+    })
+  }
+
+  onChangeChildPassword(event: InlineEvent, index){
+    if(typeof this.tunnel.child[index] != 'undefined'){
+      this.apiService.request('onPostData', <Config>{
+        data: {
+          type: 'change_tunnel_password',
+          data: {
+            type: 'child',
+            id: this.tunnel.child[index]['id'],
+            password: event.text
+          }
+        },
+        success: (response) => {
+          this.tunnel.child[index]['password'] = event.text
+        },
+        error: (error) => {
+          event.source.reset()
         }
       })
-        .subscribe(
-          response => (this.tunnel.child[index]['password'] = newPass, this.loading = false)
-        )
     }
   }
 
-  onChangeStatus(index, event: Event){
+  onChangeStatus(index, event: MatSlideToggleChange){
     if(typeof this.tunnel.child[index] == 'undefined')
       return false;
-    this.loading = true
+
     var child = this.tunnel.child[index]
     if(event['checked']){
       var action = 'enabled_child_user'
     }else{
       var action = 'disabled_child_user'
     }
-    this.ipService.apiService.request('onPostData', {
-      type: action,
+    this.apiService.request('onPostData', <Config>{
       data: {
-        id: child['id']
+        type: action,
+        data: {
+          id: child['id']
+        }
+      },
+      success: (response) => {
+        
+      },
+      error: (error) => {
+        this.tunnel.child[index]['status'] = event['checked']?0:1
+        event.source.checked = event['checked']?false:true
       }
     })
-    .subscribe(
-      response => (this.loading = false)
-    )
   }
 
   private deleteItem(index){
   	if(typeof this.tunnel.child[index] != 'undefined'){
-  		this.loading = true
       var child = this.tunnel.child[index];
-  		this.ipService.apiService.request('onPostData', {
-  			type: 'remove_child_user',
-        data: {
-          id: child['id']
+  		this.apiService.request('onPostData', <Config>{
+  			data: {
+          type: 'remove_child_user',
+          data: {
+            id: child['id']
+          }
+        },
+        success: (response) => {
+          this.tunnel.child.splice(index,1)
+          this.tunnel.max_child_account++ 
         }
   		})
-  		.subscribe(
-  			response => (this.tunnel.child.splice(index,1), this.loading = false, this.tunnel.max_child_account++ )
-  		)
   	}
   }
   

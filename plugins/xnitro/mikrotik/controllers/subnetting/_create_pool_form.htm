@@ -17,18 +17,42 @@
         </div>
         <div class="form-group span-right is-required">
             <label>User</label>
-            <select required class="form-control custom-select" name="user" data-handler="onSearchUser" data-placeholder="--Select User--" data-minimum-input-length="2" data-ajax--delay="500">
+            <select required class="form-control custom-select" name="user_id" data-handler="onSearchUser" data-placeholder="--Select User--" data-minimum-input-length="2" data-ajax--delay="500">
                 <option value=""></option>
             </select>
         </div>
 
         <div class="form-group span-left is-required">
             <label>Server</label>
-            <select required class="form-control custom-select" name="server">
+            <select required class="form-control custom-select" name="server_id">
                 <?php foreach($server as $sv): ?>
                 <option <?= $sv['default_server']=='1'?'selected="selected"':'' ?> value="<?= $sv['id'] ?>"><?= $sv['name'] ?> (<?= $sv['host'] ?>)</option>
                 <?php endforeach; ?>
             </select>
+        </div>
+
+        <div class="form-group span-right is-required">
+            <label>Expired Date</label>
+            <div data-control="datepicker"
+                data-min-date="<?= date('Y-m-d') ?>">
+                <div class="input-with-icon right-align">
+                    <i class="icon icon-calendar-o"></i>
+                    <input
+                        type="text"
+                        id="expiredDate"
+                        class="form-control align-right"
+                        autocomplete="off"
+                        required
+                        data-datepicker />
+                </div>
+                <input
+                    type="hidden"
+                    name="expired_date"
+                    id="expired_date"
+                    value=""
+                    data-datetime-value
+                    />
+            </div>
         </div>
     </div>
     <div class="modal-footer">

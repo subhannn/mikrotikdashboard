@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 
-import { UserService } from './services/user.service';
+// import { UserService } from './services/user.service';
 
 @Component({
   selector: 'app-root',
@@ -8,15 +8,15 @@ import { UserService } from './services/user.service';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit{
-  title = 'Dashboard Admin User2';
+  title = 'Dashboard Admin User';
 
   constructor (
-  	private userService: UserService
+  	// private userService: UserService,
   ) {}
 
   currentDate: number = Date.now();
 
   ngOnInit() {
-    this.userService.populate()
+    // this.userService.populate()
   }
 }

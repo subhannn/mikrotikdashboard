@@ -84,6 +84,28 @@ class MikrotikProcess implements ShouldQueue
         return $instance;
     }
 
+    public static function actionProfile($action='', $parameters=[]){
+        $instance = new self();
+        if(isset($parameters['name'])){
+            $instance->parameters = $parameters;
+            $instance->endpoint = '/ppp profile';
+            $instance->requestType = $action;
+        }
+
+        return $instance;
+    }
+
+    public static function actionPoolIp($action='', $parameters=[]){
+        $instance = new self();
+        if(isset($parameters['name'])){
+            $instance->parameters = $parameters;
+            $instance->endpoint = '/ip pool';
+            $instance->requestType = $action;
+        }
+
+        return $instance;
+    }
+
 	public function createRequest($endpoint='', $parameters=[]){
         if(in_array($this->requestType, ['delete', 'enabled', 'disabled', 'change_password'])){
             $util = new RouterOS\Util($this->_routerConn);
